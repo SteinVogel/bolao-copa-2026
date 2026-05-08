@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Palpite: {{ game.team_a }} vs {{ game.team_b }}</h2>
+<form method="POST">
+    <div class="mb-3">
+        <label for="score_a" class="form-label">Placar {{ game.team_a }}</label>
+        <input type="number" class="form-control" id="score_a" name="score_a" value="{{ bet.score_a if bet else 0 }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="score_b" class="form-label">Placar {{ game.team_b }}</label>
+        <input type="number" class="form-control" id="score_b" name="score_b" value="{{ bet.score_b if bet else 0 }}" required>
+    </div>
+    <button type="submit" class="btn btn-success">Salvar Palpite</button>
+</form>
+{% endblock %}
