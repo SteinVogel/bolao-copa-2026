@@ -36,25 +36,48 @@ Clique em "Faça seu cadastro" na página de login para criar uma conta.
 
 ## Deploy na Web
 
-### Opção 1: Railway (Recomendado - Fácil e Gratuito)
-1. Acesse [railway.app](https://railway.app)
-2. Conecte sua conta GitHub
-3. Crie um novo projeto e importe este repositório
-4. Railway detectará automaticamente o Flask app
-5. O banco SQLite será criado automaticamente
+### 🚀 Railway (Recomendado - Super Fácil)
 
-### Opção 2: Heroku
+**Passo 1: Criar conta no GitHub (se não tiver)**
+- Acesse [github.com](https://github.com)
+- Crie conta gratuita
+- Verifique seu email
+
+**Passo 2: Upload do projeto**
+- Crie um novo repositório: "bolao-copa-2026"
+- No terminal, execute:
+```bash
+git remote add origin https://github.com/SEU_USERNAME/bolao-copa-2026.git
+git branch -M main
+git push -u origin main
+```
+
+**Passo 3: Deploy no Railway**
+- Acesse [railway.app](https://railway.app)
+- Faça login com GitHub
+- Clique "New Project" → "Deploy from GitHub repo"
+- Selecione seu repositório "bolao-copa-2026"
+- Railway detectará automaticamente o Flask app
+- Deploy leva 2-3 minutos
+
+**Passo 4: Configurar domínio (opcional)**
+- No Railway dashboard, vá em "Settings" → "Domains"
+- Adicione um domínio personalizado ou use o gratuito fornecido
+
+**✅ Pronto!** Seu bolão estará online 24/7.
+
+### Outras Opções
+
+#### Heroku
 1. Instale Heroku CLI
-2. Faça login: `heroku login`
-3. Crie app: `heroku create nome-do-seu-app`
-4. Deploy: `git push heroku main`
-5. Abra: `heroku open`
+2. `heroku login`
+3. `heroku create bolao-copa-2026`
+4. `git push heroku main`
 
-### Opção 3: Vercel (Alternativa Moderna)
+#### Vercel
 1. Acesse [vercel.com](https://vercel.com)
-2. Importe o repositório GitHub
+2. Importe repositório GitHub
 3. Configure como Python app
-4. Deploy automático
 
 ## Tecnologias
 
