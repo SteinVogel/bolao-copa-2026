@@ -14,6 +14,14 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 database_url = os.environ.get('DATABASE_URL')
+running_on_railway = any(
+    os.environ.get(key)
+    for key in ('RAILWAY_ENVIRONMENT', 'RAILWAY_ENVIRONMENT_NAME', 'RAILWAY_PROJECT_ID', 'RAILWAY_SERVICE_ID')
+)
+
+if database_url and database_url.strip().startswith('${{'):
+    raise RuntimeError('DATABASE_URL do Railway nao foi resolvida. Configure DATABASE_URL=${{Postgres.DATABASE_URL}} no servico do app.')
+
 if database_url and database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
@@ -23,6 +31,8 @@ if not database_url:
         os.makedirs(railway_volume_path, exist_ok=True)
         database_url = f"sqlite:///{os.path.join(railway_volume_path, 'database.db')}"
     else:
+        if running_on_railway:
+            raise RuntimeError('DATABASE_URL ausente no Railway. Configure o app para usar o Postgres antes do deploy.')
         database_url = 'sqlite:///database.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
