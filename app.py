@@ -179,7 +179,7 @@ login_manager.login_view = 'login'
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(150), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     champion_pick = db.Column(db.String(100), nullable=True)
     runner_up_pick = db.Column(db.String(100), nullable=True)
@@ -249,6 +249,11 @@ def migrate_schema():
 
     columns = inspector.get_columns('user')
     column_names = {column['name'] for column in columns}
+    password_hash_column = next((column for column in columns if column['name'] == 'password_hash'), None)
+    if password_hash_column and getattr(password_hash_column['type'], 'length', None) and password_hash_column['type'].length < 255:
+        if db.engine.dialect.name == 'postgresql':
+            db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255)'))
+            db.session.commit()
     if 'champion_pick' not in column_names:
         db.session.execute(text('ALTER TABLE "user" ADD COLUMN champion_pick VARCHAR(100)'))
     if 'runner_up_pick' not in column_names:
