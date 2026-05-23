@@ -7,7 +7,31 @@
     }
 
     .ranking-table {
-        min-width: 760px;
+        min-width: 520px;
+    }
+
+    .ranking-details-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .ranking-detail {
+        background: rgba(13, 110, 253, 0.06);
+        border-radius: 8px;
+        padding: 0.75rem;
+    }
+
+    .ranking-detail span {
+        color: #6c757d;
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .ranking-detail strong {
+        font-size: 1.25rem;
     }
 
     .ranking-cards {
@@ -26,22 +50,22 @@
         background: #e7f1ff;
     }
 
-    .ranking-card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    .ranking-card-main {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 0.75rem;
-        margin-bottom: 0.8rem;
+        align-items: center;
     }
 
     .ranking-position {
         color: #6c757d;
         font-size: 0.9rem;
-        font-weight: 700;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
     .ranking-user {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         font-weight: 800;
         margin: 0;
         word-break: break-word;
@@ -54,30 +78,23 @@
 
     .ranking-points strong {
         display: block;
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         line-height: 1;
     }
 
-    .ranking-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.55rem;
-    }
-
-    .ranking-stat {
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-        padding-top: 0.55rem;
-    }
-
-    .ranking-stat span {
+    .ranking-points span {
         color: #6c757d;
-        display: block;
-        font-size: 0.78rem;
-        font-weight: 700;
+        font-size: 0.85rem;
     }
 
-    .ranking-stat strong {
-        font-size: 1.15rem;
+    .ranking-toggle {
+        margin-top: 0.75rem;
+        width: 100%;
+    }
+
+    .ranking-card .ranking-details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 0.75rem;
     }
 
     @media (max-width: 767.98px) {
@@ -90,21 +107,28 @@
             gap: 0.75rem;
         }
     }
+
+    @media (max-width: 380px) {
+        .ranking-card-main {
+            grid-template-columns: 1fr auto;
+        }
+
+        .ranking-position {
+            grid-column: 1 / -1;
+        }
+    }
 </style>
 
 <h2>Ranking</h2>
 
 <div class="ranking-table-wrap">
-    <table class="table table-striped ranking-table">
+    <table class="table table-striped ranking-table align-middle">
         <thead>
             <tr>
                 <th>Posição</th>
                 <th>Usuário</th>
                 <th>Pontos</th>
-                <th>Bônus finais</th>
-                <th>Placares exatos</th>
-                <th>Vencedores/empates</th>
-                <th>Erros</th>
+                <th class="text-end">Detalhes</th>
             </tr>
         </thead>
         <tbody>
@@ -112,11 +136,34 @@
             <tr class="{% if item.user.id == current_user.id %}table-primary{% endif %}">
                 <td>{{ loop.index }}</td>
                 <td>{{ item.user.username }}</td>
-                <td>{{ item.points }}</td>
-                <td>{{ item.final_bonus }}</td>
-                <td>{{ item.exact_scores }}</td>
-                <td>{{ item.correct_outcomes }}</td>
-                <td>{{ item.errors }}</td>
+                <td><strong>{{ item.points }}</strong></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#ranking-details-row-{{ item.user.id }}" aria-expanded="false" aria-controls="ranking-details-row-{{ item.user.id }}">
+                        Detalhes
+                    </button>
+                </td>
+            </tr>
+            <tr class="collapse {% if item.user.id == current_user.id %}table-primary{% endif %}" id="ranking-details-row-{{ item.user.id }}">
+                <td colspan="4">
+                    <div class="ranking-details-grid">
+                        <div class="ranking-detail">
+                            <span>Bônus finais</span>
+                            <strong>{{ item.final_bonus }}</strong>
+                        </div>
+                        <div class="ranking-detail">
+                            <span>Placares exatos</span>
+                            <strong>{{ item.exact_scores }}</strong>
+                        </div>
+                        <div class="ranking-detail">
+                            <span>Vencedores/empates</span>
+                            <strong>{{ item.correct_outcomes }}</strong>
+                        </div>
+                        <div class="ranking-detail">
+                            <span>Erros</span>
+                            <strong>{{ item.errors }}</strong>
+                        </div>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -126,32 +173,35 @@
 <div class="ranking-cards">
     {% for item in ranking %}
     <section class="ranking-card {% if item.user.id == current_user.id %}current-user{% endif %}">
-        <div class="ranking-card-header">
-            <div>
-                <div class="ranking-position">{{ loop.index }}º lugar</div>
-                <h3 class="ranking-user">{{ item.user.username }}</h3>
-            </div>
+        <div class="ranking-card-main">
+            <div class="ranking-position">{{ loop.index }}º</div>
+            <h3 class="ranking-user">{{ item.user.username }}</h3>
             <div class="ranking-points">
                 <strong>{{ item.points }}</strong>
                 <span>pontos</span>
             </div>
         </div>
-        <div class="ranking-stats">
-            <div class="ranking-stat">
-                <span>Bônus finais</span>
-                <strong>{{ item.final_bonus }}</strong>
-            </div>
-            <div class="ranking-stat">
-                <span>Placares exatos</span>
-                <strong>{{ item.exact_scores }}</strong>
-            </div>
-            <div class="ranking-stat">
-                <span>Vencedores/empates</span>
-                <strong>{{ item.correct_outcomes }}</strong>
-            </div>
-            <div class="ranking-stat">
-                <span>Erros</span>
-                <strong>{{ item.errors }}</strong>
+        <button class="btn btn-sm btn-outline-primary ranking-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#ranking-details-card-{{ item.user.id }}" aria-expanded="false" aria-controls="ranking-details-card-{{ item.user.id }}">
+            Ver detalhes
+        </button>
+        <div class="collapse" id="ranking-details-card-{{ item.user.id }}">
+            <div class="ranking-details-grid">
+                <div class="ranking-detail">
+                    <span>Bônus finais</span>
+                    <strong>{{ item.final_bonus }}</strong>
+                </div>
+                <div class="ranking-detail">
+                    <span>Placares exatos</span>
+                    <strong>{{ item.exact_scores }}</strong>
+                </div>
+                <div class="ranking-detail">
+                    <span>Vencedores/empates</span>
+                    <strong>{{ item.correct_outcomes }}</strong>
+                </div>
+                <div class="ranking-detail">
+                    <span>Erros</span>
+                    <strong>{{ item.errors }}</strong>
+                </div>
             </div>
         </div>
     </section>
