@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .performance-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .performance-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .performance-card {
+        border: 1px solid rgba(13, 110, 253, 0.14);
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fff;
+        min-height: 112px;
+        box-shadow: 0 8px 24px rgba(33, 37, 41, 0.06);
+    }
+
+    .performance-card.primary {
+        background: #0d6efd;
+        color: #fff;
+    }
+
+    .performance-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+    }
+
+    .performance-card.primary .performance-label {
+        color: rgba(255, 255, 255, 0.82);
+    }
+
+    .performance-value {
+        font-size: clamp(1.75rem, 5vw, 2.5rem);
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.35rem;
+    }
+
+    .performance-note {
+        color: #6c757d;
+        font-size: 0.88rem;
+        margin: 0;
+    }
+
+    .performance-card.primary .performance-note {
+        color: rgba(255, 255, 255, 0.82);
+    }
+
+    @media (max-width: 767.98px) {
+        .performance-header {
+            display: block;
+        }
+
+        .performance-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .performance-card {
+            min-height: auto;
+            padding: 0.9rem;
+        }
+
+        .performance-value {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="performance-header">
+    <div>
+        <h2 class="mb-1">Meu desempenho</h2>
+        <p class="text-muted mb-0">{{ current_user.username }}</p>
+    </div>
+    <a href="{{ url_for('ranking') }}" class="btn btn-outline-primary">Ver ranking</a>
+</div>
+
+<div class="performance-grid">
+    <section class="performance-card primary">
+        <div class="performance-label">Pontos totais</div>
+        <div class="performance-value">{{ performance.points }}</div>
+        <p class="performance-note">{{ performance.bet_points }} em jogos + {{ performance.final_bonus }} de bônus</p>
+    </section>
+
+    <section class="performance-card">
+        <div class="performance-label">Placares exatos</div>
+        <div class="performance-value">{{ performance.exact_scores }}</div>
+        <p class="performance-note">Palpites que bateram o placar completo.</p>
+    </section>
+
+    <section class="performance-card">
+        <div class="performance-label">Vencedores/empates corretos</div>
+        <div class="performance-value">{{ performance.correct_outcomes }}</div>
+        <p class="performance-note">Inclui acertos de resultado e placares exatos.</p>
+    </section>
+
+    <section class="performance-card">
+        <div class="performance-label">Erros</div>
+        <div class="performance-value">{{ performance.errors }}</div>
+        <p class="performance-note">Palpites sem pontuação nos jogos finalizados.</p>
+    </section>
+
+    <section class="performance-card">
+        <div class="performance-label">Bônus finais</div>
+        <div class="performance-value">{{ performance.final_bonus }}</div>
+        <p class="performance-note">
+            Campeão {{ performance.champion_bonus }},
+            vice {{ performance.runner_up_bonus }},
+            terceiro {{ performance.third_place_bonus }}.
+        </p>
+    </section>
+
+    <section class="performance-card">
+        <div class="performance-label">Aproveitamento</div>
+        <div class="performance-value">{{ performance.success_rate }}%</div>
+        <p class="performance-note">
+            {{ performance.points }} de {{ performance.max_points }} pontos possíveis em itens já apurados.
+        </p>
+    </section>
+</div>
+
+<div class="alert alert-light border mt-4 mb-0">
+    {{ performance.evaluated_bets }} palpites já têm resultado cadastrado.
+    {% if performance.total_bets > performance.evaluated_bets %}
+        {{ performance.total_bets - performance.evaluated_bets }} ainda aguardam resultado.
+    {% endif %}
+</div>
+{% endblock %}

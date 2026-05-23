@@ -10,5 +10,6 @@ ENV/
 env.bak/
 venv.bak/
 database.db
+instance/database.db
 .DS_Store
 *.log

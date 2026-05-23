@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Palpites finais da Copa</h2>
+
+{% if current_user.champion_pick and current_user.runner_up_pick and current_user.third_place_pick %}
+<div class="alert alert-info">
+    Seus palpites finais já foram confirmados e não podem ser alterados.
+</div>
+<ul class="list-group mb-3">
+    <li class="list-group-item"><strong>Campeão:</strong> {{ current_user.champion_pick }}</li>
+    <li class="list-group-item"><strong>Vice-campeão:</strong> {{ current_user.runner_up_pick }}</li>
+    <li class="list-group-item"><strong>Terceiro lugar:</strong> {{ current_user.third_place_pick }}</li>
+</ul>
+<a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Voltar</a>
+{% elif not team_names %}
+<div class="alert alert-warning">
+    Ainda não há seleções cadastradas nos jogos. Aguarde o administrador cadastrar as partidas.
+</div>
+<a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Voltar</a>
+{% else %}
+<div class="alert alert-warning">
+    Escolha com cuidado: depois de confirmar, estes palpites não poderão ser alterados. Bônus: campeão 150 pontos, vice-campeão 100 pontos e terceiro lugar 50 pontos.
+</div>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="champion" class="form-label">Campeão</label>
+        <select class="form-select" id="champion" name="champion" required>
+            <option value="">Selecione</option>
+            {% for team_name in team_names %}
+                <option value="{{ team_name }}">{{ team_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="runner_up" class="form-label">Vice-campeão</label>
+        <select class="form-select" id="runner_up" name="runner_up" required>
+            <option value="">Selecione</option>
+            {% for team_name in team_names %}
+                <option value="{{ team_name }}">{{ team_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="third_place" class="form-label">Terceiro lugar</label>
+        <select class="form-select" id="third_place" name="third_place" required>
+            <option value="">Selecione</option>
+            {% for team_name in team_names %}
+                <option value="{{ team_name }}">{{ team_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary" onclick="return confirm('Confirmar palpites finais? Eles não poderão ser alterados.');">Confirmar</button>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Voltar</a>
+</form>
+{% endif %}
+{% endblock %}

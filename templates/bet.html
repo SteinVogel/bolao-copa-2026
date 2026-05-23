@@ -1,16 +1,46 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Palpite: {{ game.team_a }} vs {{ game.team_b }}</h2>
+<h2>{{ game.team_a }} vs {{ game.team_b }}</h2>
+
+<div class="mb-3">
+    <p class="mb-1"><strong>Data:</strong> {{ game.date.strftime('%d/%m/%Y %H:%M') }}</p>
+    <p class="mb-1"><strong>Fase:</strong> {{ game.phase }}</p>
+    <p class="mb-1">
+        <strong>Status:</strong>
+        {% if closed %}
+            <span class="badge bg-secondary">Fechado</span>
+        {% else %}
+            <span class="badge bg-success">Aberto para palpites</span>
+        {% endif %}
+    </p>
+    {% if result %}
+        <p class="mb-1"><strong>Resultado:</strong> {{ result.score_a }} - {{ result.score_b }}</p>
+    {% endif %}
+    {% if bet %}
+        <p class="mb-1"><strong>Seu palpite:</strong> {{ bet.score_a }} - {{ bet.score_b }}</p>
+    {% endif %}
+</div>
+
+{% if closed %}
+<div class="alert alert-warning">
+    Palpites encerrados para este jogo.
+</div>
+{% endif %}
+
 <form method="POST">
-    <div class="mb-3">
-        <label for="score_a" class="form-label">Placar {{ game.team_a }}</label>
-        <input type="number" class="form-control" id="score_a" name="score_a" value="{{ bet.score_a if bet else 0 }}" required>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="score_a" class="form-label">Gols {{ game.team_a }}</label>
+            <input type="number" class="form-control" id="score_a" name="score_a" min="0" value="{{ bet.score_a if bet else 0 }}" required {% if closed %}disabled{% endif %}>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="score_b" class="form-label">Gols {{ game.team_b }}</label>
+            <input type="number" class="form-control" id="score_b" name="score_b" min="0" value="{{ bet.score_b if bet else 0 }}" required {% if closed %}disabled{% endif %}>
+        </div>
     </div>
-    <div class="mb-3">
-        <label for="score_b" class="form-label">Placar {{ game.team_b }}</label>
-        <input type="number" class="form-control" id="score_b" name="score_b" value="{{ bet.score_b if bet else 0 }}" required>
-    </div>
-    <button type="submit" class="btn btn-success">Salvar Palpite</button>
+
+    <button type="submit" class="btn btn-success" {% if closed %}disabled{% endif %}>Salvar Palpite</button>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Voltar</a>
 </form>
 {% endblock %}

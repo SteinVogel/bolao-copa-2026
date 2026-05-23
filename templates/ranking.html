@@ -8,14 +8,22 @@
             <th>Posição</th>
             <th>Usuário</th>
             <th>Pontos</th>
+            <th>Bônus finais</th>
+            <th>Placares exatos</th>
+            <th>Vencedores/empates</th>
+            <th>Erros</th>
         </tr>
     </thead>
     <tbody>
         {% for item in ranking %}
-        <tr>
+        <tr class="{% if item.user.id == current_user.id %}table-primary{% endif %}">
             <td>{{ loop.index }}</td>
             <td>{{ item.user.username }}</td>
             <td>{{ item.points }}</td>
+            <td>{{ item.final_bonus }}</td>
+            <td>{{ item.exact_scores }}</td>
+            <td>{{ item.correct_outcomes }}</td>
+            <td>{{ item.errors }}</td>
         </tr>
         {% endfor %}
     </tbody>
