@@ -100,7 +100,7 @@
 
 <h3>Classificação Final Oficial</h3>
 {% if team_names %}
-<form method="POST" action="{{ url_for('update_official_champion') }}" class="row">
+<form method="POST" action="{{ url_for('update_official_champion') }}" class="row" id="official-final-form">
     <div class="col-md-3 mb-2">
         <label class="form-label" for="champion">Campeão</label>
         <select class="form-select" id="champion" name="champion" required>
@@ -132,6 +132,36 @@
         <button type="submit" class="btn btn-primary">Salvar</button>
     </div>
 </form>
+<script>
+    const officialFinalSelects = [
+        document.getElementById('champion'),
+        document.getElementById('runner_up'),
+        document.getElementById('third_place'),
+    ];
+    const officialFinalForm = document.getElementById('official-final-form');
+
+    function updateOfficialFinalOptions() {
+        const selectedValues = officialFinalSelects.map((select) => select.value).filter(Boolean);
+        officialFinalSelects.forEach((select) => {
+            Array.from(select.options).forEach((option) => {
+                option.disabled = Boolean(option.value)
+                    && option.value !== select.value
+                    && selectedValues.includes(option.value);
+            });
+        });
+    }
+
+    officialFinalSelects.forEach((select) => select.addEventListener('change', updateOfficialFinalOptions));
+    updateOfficialFinalOptions();
+
+    officialFinalForm.addEventListener('submit', (event) => {
+        const selectedValues = officialFinalSelects.map((select) => select.value).filter(Boolean);
+        if (new Set(selectedValues).size !== selectedValues.length) {
+            event.preventDefault();
+            alert('Campeão, vice-campeão e terceiro lugar devem ser seleções diferentes.');
+        }
+    });
+</script>
 {% else %}
 <div class="alert alert-warning">Cadastre jogos para liberar a lista de seleções.</div>
 {% endif %}

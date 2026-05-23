@@ -23,7 +23,7 @@
     Escolha com cuidado: depois de confirmar, estes palpites não poderão ser alterados. Bônus: campeão 150 pontos, vice-campeão 100 pontos e terceiro lugar 50 pontos.
 </div>
 
-<form method="POST">
+<form method="POST" id="final-picks-form">
     <div class="mb-3">
         <label for="champion" class="form-label">Campeão</label>
         <select class="form-select" id="champion" name="champion" required>
@@ -51,8 +51,44 @@
             {% endfor %}
         </select>
     </div>
-    <button type="submit" class="btn btn-primary" onclick="return confirm('Confirmar palpites finais? Eles não poderão ser alterados.');">Confirmar</button>
+    <button type="submit" class="btn btn-primary">Confirmar</button>
     <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Voltar</a>
 </form>
+
+<script>
+    const finalPickSelects = [
+        document.getElementById('champion'),
+        document.getElementById('runner_up'),
+        document.getElementById('third_place'),
+    ];
+    const finalPicksForm = document.getElementById('final-picks-form');
+
+    function updateFinalPickOptions() {
+        const selectedValues = finalPickSelects.map((select) => select.value).filter(Boolean);
+        finalPickSelects.forEach((select) => {
+            Array.from(select.options).forEach((option) => {
+                option.disabled = Boolean(option.value)
+                    && option.value !== select.value
+                    && selectedValues.includes(option.value);
+            });
+        });
+    }
+
+    finalPickSelects.forEach((select) => select.addEventListener('change', updateFinalPickOptions));
+    updateFinalPickOptions();
+
+    finalPicksForm.addEventListener('submit', (event) => {
+        const selectedValues = finalPickSelects.map((select) => select.value).filter(Boolean);
+        if (new Set(selectedValues).size !== selectedValues.length) {
+            event.preventDefault();
+            alert('Campeão, vice-campeão e terceiro lugar devem ser seleções diferentes.');
+            return;
+        }
+
+        if (!confirm('Confirmar palpites finais? Eles não poderão ser alterados.')) {
+            event.preventDefault();
+        }
+    });
+</script>
 {% endif %}
 {% endblock %}

@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import os
 from collections import OrderedDict
 import unicodedata
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
@@ -28,6 +29,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+
+try:
+    APP_TIMEZONE = ZoneInfo(os.environ.get('APP_TIMEZONE', 'America/Sao_Paulo'))
+except ZoneInfoNotFoundError:
+    APP_TIMEZONE = timezone(timedelta(hours=-3), 'America/Sao_Paulo')
 
 WORLD_CUP_2026_TEAMS = [
     'África do Sul',
@@ -387,7 +393,11 @@ def calculate_user_performance(user):
 
 
 def is_game_closed(game):
-    return game.date <= datetime.now()
+    return game.date <= get_current_time()
+
+
+def get_current_time():
+    return datetime.now(APP_TIMEZONE).replace(tzinfo=None)
 
 
 def is_admin_user():
@@ -413,7 +423,7 @@ def index():
     for game in games:
         game_day = game.date.date()
         grouped_games.setdefault(game_day, []).append(game)
-    return render_template('index.html', grouped_games=grouped_games, user_bets=user_bets, now=datetime.now())
+    return render_template('index.html', grouped_games=grouped_games, user_bets=user_bets, now=get_current_time())
 
 
 @app.route('/login', methods=['GET', 'POST'])

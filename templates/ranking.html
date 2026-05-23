@@ -1,31 +1,160 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .ranking-table-wrap {
+        overflow-x: auto;
+    }
+
+    .ranking-table {
+        min-width: 760px;
+    }
+
+    .ranking-cards {
+        display: none;
+    }
+
+    .ranking-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0.95rem;
+        background: #fff;
+    }
+
+    .ranking-card.current-user {
+        border-color: #9ec5fe;
+        background: #e7f1ff;
+    }
+
+    .ranking-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .ranking-position {
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .ranking-user {
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin: 0;
+        word-break: break-word;
+    }
+
+    .ranking-points {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .ranking-points strong {
+        display: block;
+        font-size: 1.6rem;
+        line-height: 1;
+    }
+
+    .ranking-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem;
+    }
+
+    .ranking-stat {
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        padding-top: 0.55rem;
+    }
+
+    .ranking-stat span {
+        color: #6c757d;
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .ranking-stat strong {
+        font-size: 1.15rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .ranking-table-wrap {
+            display: none;
+        }
+
+        .ranking-cards {
+            display: grid;
+            gap: 0.75rem;
+        }
+    }
+</style>
+
 <h2>Ranking</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Posição</th>
-            <th>Usuário</th>
-            <th>Pontos</th>
-            <th>Bônus finais</th>
-            <th>Placares exatos</th>
-            <th>Vencedores/empates</th>
-            <th>Erros</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in ranking %}
-        <tr class="{% if item.user.id == current_user.id %}table-primary{% endif %}">
-            <td>{{ loop.index }}</td>
-            <td>{{ item.user.username }}</td>
-            <td>{{ item.points }}</td>
-            <td>{{ item.final_bonus }}</td>
-            <td>{{ item.exact_scores }}</td>
-            <td>{{ item.correct_outcomes }}</td>
-            <td>{{ item.errors }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+
+<div class="ranking-table-wrap">
+    <table class="table table-striped ranking-table">
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Usuário</th>
+                <th>Pontos</th>
+                <th>Bônus finais</th>
+                <th>Placares exatos</th>
+                <th>Vencedores/empates</th>
+                <th>Erros</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in ranking %}
+            <tr class="{% if item.user.id == current_user.id %}table-primary{% endif %}">
+                <td>{{ loop.index }}</td>
+                <td>{{ item.user.username }}</td>
+                <td>{{ item.points }}</td>
+                <td>{{ item.final_bonus }}</td>
+                <td>{{ item.exact_scores }}</td>
+                <td>{{ item.correct_outcomes }}</td>
+                <td>{{ item.errors }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="ranking-cards">
+    {% for item in ranking %}
+    <section class="ranking-card {% if item.user.id == current_user.id %}current-user{% endif %}">
+        <div class="ranking-card-header">
+            <div>
+                <div class="ranking-position">{{ loop.index }}º lugar</div>
+                <h3 class="ranking-user">{{ item.user.username }}</h3>
+            </div>
+            <div class="ranking-points">
+                <strong>{{ item.points }}</strong>
+                <span>pontos</span>
+            </div>
+        </div>
+        <div class="ranking-stats">
+            <div class="ranking-stat">
+                <span>Bônus finais</span>
+                <strong>{{ item.final_bonus }}</strong>
+            </div>
+            <div class="ranking-stat">
+                <span>Placares exatos</span>
+                <strong>{{ item.exact_scores }}</strong>
+            </div>
+            <div class="ranking-stat">
+                <span>Vencedores/empates</span>
+                <strong>{{ item.correct_outcomes }}</strong>
+            </div>
+            <div class="ranking-stat">
+                <span>Erros</span>
+                <strong>{{ item.errors }}</strong>
+            </div>
+        </div>
+    </section>
+    {% endfor %}
+</div>
 {% endblock %}
