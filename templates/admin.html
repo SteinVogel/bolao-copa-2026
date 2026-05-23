@@ -1,6 +1,101 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .admin-games {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .admin-game {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fff;
+    }
+
+    .admin-game-main {
+        display: grid;
+        grid-template-columns: minmax(260px, 1.3fr) minmax(190px, 0.7fr) minmax(190px, 0.7fr) auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .admin-game-title {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .admin-game-title .form-control {
+        min-width: 0;
+        font-weight: 600;
+    }
+
+    .admin-game-versus {
+        color: #6c757d;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .admin-result-form {
+        display: grid;
+        grid-template-columns: 70px 70px auto;
+        gap: 0.4rem;
+    }
+
+    .admin-game-actions {
+        display: flex;
+        gap: 0.4rem;
+        justify-content: flex-end;
+    }
+
+    .admin-field-label {
+        color: #6c757d;
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    @media (max-width: 991.98px) {
+        .admin-game-main {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+        }
+
+        .admin-game-title {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-game-versus {
+            text-align: left;
+        }
+
+        .admin-result-form {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .admin-result-form .btn {
+            grid-column: 1 / -1;
+        }
+
+        .admin-game-actions {
+            justify-content: stretch;
+        }
+
+        .admin-game-actions .btn,
+        .admin-game-actions form {
+            flex: 1;
+        }
+
+        .admin-game-actions form .btn {
+            width: 100%;
+        }
+    }
+</style>
+
 <h2>Painel Administrativo</h2>
 
 <h3>Classificação Final Oficial</h3>
@@ -67,51 +162,51 @@
 </form>
 
 <h3 class="mt-4">Jogos e Resultados</h3>
-<table class="table align-middle">
-    <thead>
-        <tr>
-            <th>Jogo</th>
-            <th>Data</th>
-            <th>Fase</th>
-            <th>Resultado</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for game in games %}
-        {% set result = game.results[0] if game.results else None %}
-        <tr>
-            <td>
+<div class="admin-games">
+    {% for game in games %}
+    {% set result = game.results[0] if game.results else None %}
+    <section class="admin-game">
+        <div class="admin-game-main">
+            <div>
+                <span class="admin-field-label">Jogo</span>
                 <form id="game-form-{{ game.id }}" method="POST" action="{{ url_for('update_game', game_id=game.id) }}">
-                    <div class="d-flex gap-1">
-                        <input type="text" class="form-control form-control-sm" name="team_a" value="{{ game.team_a }}" required>
-                        <input type="text" class="form-control form-control-sm" name="team_b" value="{{ game.team_b }}" required>
+                    <div class="admin-game-title">
+                        <input type="text" class="form-control form-control-sm" name="team_a" value="{{ game.team_a }}" aria-label="Time A" required>
+                        <span class="admin-game-versus">vs</span>
+                        <input type="text" class="form-control form-control-sm" name="team_b" value="{{ game.team_b }}" aria-label="Time B" required>
                     </div>
                 </form>
-            </td>
-            <td>
-                <input form="game-form-{{ game.id }}" type="datetime-local" class="form-control form-control-sm" name="date" value="{{ game.date.strftime('%Y-%m-%dT%H:%M') }}" required>
-            </td>
-            <td>
-                <input form="game-form-{{ game.id }}" type="text" class="form-control form-control-sm" name="phase" value="{{ game.phase }}" required>
-            </td>
-            <td>
-                <form method="POST" action="{{ url_for('add_result', game_id=game.id) }}" class="d-flex gap-1">
-                    <input type="number" class="form-control form-control-sm" name="score_a" value="{{ result.score_a if result else '' }}" placeholder="A" required style="max-width:70px;">
-                    <input type="number" class="form-control form-control-sm" name="score_b" value="{{ result.score_b if result else '' }}" placeholder="B" required style="max-width:70px;">
-                    <button type="submit" class="btn btn-sm btn-success">Resultado</button>
+            </div>
+
+            <div>
+                <label class="admin-field-label" for="game-date-{{ game.id }}">Data</label>
+                <input form="game-form-{{ game.id }}" id="game-date-{{ game.id }}" type="datetime-local" class="form-control form-control-sm" name="date" value="{{ game.date.strftime('%Y-%m-%dT%H:%M') }}" required>
+            </div>
+
+            <div>
+                <label class="admin-field-label" for="game-phase-{{ game.id }}">Fase</label>
+                <input form="game-form-{{ game.id }}" id="game-phase-{{ game.id }}" type="text" class="form-control form-control-sm" name="phase" value="{{ game.phase }}" required>
+            </div>
+
+            <div>
+                <span class="admin-field-label">Resultado</span>
+                <form method="POST" action="{{ url_for('add_result', game_id=game.id) }}" class="admin-result-form">
+                    <input type="number" class="form-control form-control-sm" name="score_a" value="{{ result.score_a if result else '' }}" min="0" placeholder="A" aria-label="Gols do time A" required>
+                    <input type="number" class="form-control form-control-sm" name="score_b" value="{{ result.score_b if result else '' }}" min="0" placeholder="B" aria-label="Gols do time B" required>
+                    <button type="submit" class="btn btn-sm btn-success">Salvar resultado</button>
                 </form>
-            </td>
-            <td>
-                <button form="game-form-{{ game.id }}" type="submit" class="btn btn-sm btn-outline-primary">Jogo</button>
-                <form method="POST" action="{{ url_for('delete_game', game_id=game.id) }}" class="d-inline" onsubmit="return confirm('Excluir este jogo e seus palpites?');">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            </div>
+        </div>
+
+        <div class="admin-game-actions mt-3">
+            <button form="game-form-{{ game.id }}" type="submit" class="btn btn-sm btn-outline-primary">Salvar jogo</button>
+            <form method="POST" action="{{ url_for('delete_game', game_id=game.id) }}" onsubmit="return confirm('Excluir este jogo e seus palpites?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+            </form>
+        </div>
+    </section>
+    {% endfor %}
+</div>
 
 <h3 class="mt-4">Participantes</h3>
 <div class="table-responsive">
