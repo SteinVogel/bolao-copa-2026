@@ -39,6 +39,7 @@
                         <a class="nav-link" href="{{ url_for('champion_pick') }}">Finais</a>
                     {% endif %}
                     <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                    <a class="nav-link" href="{{ url_for('terms') }}">Termos</a>
                     {% if current_user.is_admin %}
                         <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
                     {% endif %}

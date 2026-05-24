@@ -184,6 +184,8 @@ class User(db.Model, UserMixin):
     champion_pick = db.Column(db.String(100), nullable=True)
     runner_up_pick = db.Column(db.String(100), nullable=True)
     third_place_pick = db.Column(db.String(100), nullable=True)
+    terms_accepted_at = db.Column(db.DateTime, nullable=True)
+    hide_terms_notice = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         from werkzeug.security import generate_password_hash
@@ -260,7 +262,11 @@ def migrate_schema():
         db.session.execute(text('ALTER TABLE "user" ADD COLUMN runner_up_pick VARCHAR(100)'))
     if 'third_place_pick' not in column_names:
         db.session.execute(text('ALTER TABLE "user" ADD COLUMN third_place_pick VARCHAR(100)'))
-    if {'champion_pick', 'runner_up_pick', 'third_place_pick'} - column_names:
+    if 'terms_accepted_at' not in column_names:
+        db.session.execute(text('ALTER TABLE "user" ADD COLUMN terms_accepted_at DATETIME'))
+    if 'hide_terms_notice' not in column_names:
+        db.session.execute(text('ALTER TABLE "user" ADD COLUMN hide_terms_notice BOOLEAN DEFAULT 0'))
+    if {'champion_pick', 'runner_up_pick', 'third_place_pick', 'terms_accepted_at', 'hide_terms_notice'} - column_names:
         db.session.commit()
 
 
@@ -287,7 +293,8 @@ def calculate_bet_stats(bet, result):
     return {
         'points': points,
         'exact_scores': 1 if points == 5 else 0,
-        'correct_outcomes': 1 if points in (3, 5) else 0,
+        'correct_outcomes': 1 if points == 3 else 0,
+        'partial_scores': 1 if points == 1 else 0,
         'errors': 1 if points == 0 else 0,
     }
 
@@ -357,6 +364,7 @@ def calculate_user_performance(user):
     bet_points = 0
     exact_scores = 0
     correct_outcomes = 0
+    partial_scores = 0
     errors = 0
     evaluated_bets = 0
 
@@ -370,6 +378,7 @@ def calculate_user_performance(user):
         bet_points += stats['points']
         exact_scores += stats['exact_scores']
         correct_outcomes += stats['correct_outcomes']
+        partial_scores += stats['partial_scores']
         errors += stats['errors']
 
     final_bonus = calculate_final_standings_bonus(
@@ -399,6 +408,7 @@ def calculate_user_performance(user):
         'final_bonus': final_bonus['total'],
         'exact_scores': exact_scores,
         'correct_outcomes': correct_outcomes,
+        'partial_scores': partial_scores,
         'errors': errors,
         'evaluated_bets': evaluated_bets,
         'total_bets': len(bets),
@@ -451,6 +461,8 @@ def login():
             login_user(user)
             if user.is_admin:
                 return redirect(url_for('admin'))
+            if should_show_terms_notice(user):
+                return redirect(url_for('terms'))
             return redirect(url_for('index'))
         flash('Credenciais inválidas')
     return render_template('login.html')
@@ -498,6 +510,32 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+
+def should_show_terms_notice(user):
+    return not user.terms_accepted_at or not user.hide_terms_notice
+
+
+def participant_home_url():
+    if not has_final_standings_pick(current_user):
+        return url_for('champion_pick')
+    return url_for('index')
+
+
+@app.route('/termos', methods=['GET', 'POST'])
+@login_required
+def terms():
+    if request.method == 'POST':
+        if current_user.is_admin:
+            return redirect(url_for('admin'))
+
+        current_user.terms_accepted_at = get_current_time()
+        current_user.hide_terms_notice = bool(request.form.get('hide_terms_notice'))
+        db.session.commit()
+        flash('Termos de uso confirmados')
+        return redirect(participant_home_url())
+
+    return render_template('terms.html')
 
 
 @app.route('/champion-pick', methods=['GET', 'POST'])
@@ -583,6 +621,7 @@ def ranking():
             item['points'],
             item['exact_scores'],
             item['correct_outcomes'],
+            item['partial_scores'],
             -item['errors'],
         ),
         reverse=True,

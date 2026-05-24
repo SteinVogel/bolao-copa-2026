@@ -56,7 +56,7 @@ A prioridade do projeto é:
 
 \- Login simples
 
-\- Cadastro manual de participantes
+\- Cadastro de participantes pelo próprio usuário
 
 \- Cadastro/importação de jogos
 
@@ -107,8 +107,6 @@ A prioridade do projeto é:
 \- Modo escuro
 
 \- Sistema de recuperação de senha
-
-\- Cadastro público
 
 \- Logs administrativos
 
@@ -312,6 +310,28 @@ bolao\_copa/
 
 Usuários
 
+Perfis independentes:
+
+ADMIN
+
+perfil administrativo
+
+cadastra jogos
+
+lança e edita resultados
+
+acessa cadastro de participantes para ajustes eventuais
+
+USER
+
+perfil de participante
+
+faz o próprio cadastro
+
+cadastra e altera palpites até o horário de início da partida
+
+acessa o ranking geral
+
 ADMIN
 
 
@@ -324,7 +344,7 @@ Permissões:
 
 
 
-cadastrar participantes
+gerenciar participantes
 
 editar participantes
 
@@ -370,6 +390,14 @@ nome de usuário
 
 senha simples
 
+Cadastro
+
+cada participante faz o próprio cadastro
+
+informa nome de usuário
+
+informa senha
+
 Segurança
 
 senha armazenada apenas como hash
@@ -411,6 +439,16 @@ usuário
 senha
 
 botão entrar
+
+Cadastro
+
+usuário
+
+senha
+
+confirmar senha
+
+botão cadastrar
 
 Home
 

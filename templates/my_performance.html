@@ -103,7 +103,13 @@
     <section class="performance-card">
         <div class="performance-label">Vencedores/empates corretos</div>
         <div class="performance-value">{{ performance.correct_outcomes }}</div>
-        <p class="performance-note">Inclui acertos de resultado e placares exatos.</p>
+        <p class="performance-note">Acertos do resultado sem placar exato.</p>
+    </section>
+
+    <section class="performance-card">
+        <div class="performance-label">Gols de um lado</div>
+        <div class="performance-value">{{ performance.partial_scores }}</div>
+        <p class="performance-note">Palpites que acertaram os gols de uma selecao.</p>
     </section>
 
     <section class="performance-card">

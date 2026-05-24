@@ -9,7 +9,7 @@ Sistema web para bolão da Copa do Mundo FIFA 2026.
 - **Cadastro de jogos**: Admin adiciona jogos da Copa
 - **Palpites por partida**: Participantes fazem seus palpites
 - **Lançamento de resultados**: Admin lança os resultados reais
-- **Pontuação automática**: 3 pontos placar exato, 1 ponto vencedor
+- **Pontuação automática**: 5 pontos placar exato, 3 pontos vencedor/empate, 1 ponto por gols de um lado
 - **Ranking em tempo real**: Tabela com ranking atualizado
 - **Painel administrativo**: Gerenciamento de jogos e resultados
 
@@ -30,8 +30,9 @@ Clique em "Faça seu cadastro" na página de login para criar uma conta.
 
 ## Pontuação
 
-- **Placar exato**: 3 pontos
-- **Apenas vencedor**: 1 ponto
+- **Placar exato**: 5 pontos
+- **Vencedor/empate correto**: 3 pontos
+- **Gols corretos de um lado**: 1 ponto
 - **Errado**: 0 pontos
 
 ## Deploy na Web
