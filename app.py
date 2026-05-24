@@ -263,7 +263,7 @@ def migrate_schema():
     if 'third_place_pick' not in column_names:
         db.session.execute(text('ALTER TABLE "user" ADD COLUMN third_place_pick VARCHAR(100)'))
     if 'terms_accepted_at' not in column_names:
-        db.session.execute(text('ALTER TABLE "user" ADD COLUMN terms_accepted_at DATETIME'))
+        db.session.execute(text('ALTER TABLE "user" ADD COLUMN terms_accepted_at TIMESTAMP'))
     if 'hide_terms_notice' not in column_names:
         db.session.execute(text('ALTER TABLE "user" ADD COLUMN hide_terms_notice BOOLEAN DEFAULT 0'))
     if {'champion_pick', 'runner_up_pick', 'third_place_pick', 'terms_accepted_at', 'hide_terms_notice'} - column_names:
