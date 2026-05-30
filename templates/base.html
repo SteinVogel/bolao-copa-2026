@@ -59,5 +59,60 @@
         {% block content %}{% endblock %}
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (() => {
+            const scrollKeyFor = (path) => `copa2026-scroll:${path}`;
+            const currentKey = scrollKeyFor(window.location.pathname);
+            const saveScroll = (key, targetSelector) => {
+                const target = targetSelector ? document.querySelector(targetSelector) : null;
+                const payload = {
+                    y: window.scrollY,
+                    target: targetSelector || null,
+                    offset: target ? target.getBoundingClientRect().top : null,
+                };
+                sessionStorage.setItem(key, JSON.stringify(payload));
+            };
+
+            const restoreScroll = (savedScroll) => {
+                let payload;
+                try {
+                    payload = JSON.parse(savedScroll);
+                } catch {
+                    payload = { y: Number(savedScroll) || 0 };
+                }
+
+                if (payload.target) {
+                    const target = document.querySelector(payload.target);
+                    if (target) {
+                        const offset = Number(payload.offset) || 0;
+                        window.scrollTo(0, window.scrollY + target.getBoundingClientRect().top - offset);
+                        return;
+                    }
+                }
+
+                window.scrollTo(0, Number(payload.y) || 0);
+            };
+
+            const savedScroll = sessionStorage.getItem(currentKey);
+
+            if (savedScroll !== null) {
+                sessionStorage.removeItem(currentKey);
+                window.requestAnimationFrame(() => restoreScroll(savedScroll));
+            }
+
+            document.querySelectorAll('form[data-preserve-scroll]').forEach((form) => {
+                form.addEventListener('submit', () => {
+                    saveScroll(currentKey, form.dataset.preserveScrollTarget);
+                });
+            });
+
+            document.querySelectorAll('a[data-preserve-scroll-for]').forEach((link) => {
+                link.addEventListener('click', () => {
+                    const targetPath = new URL(link.dataset.preserveScrollFor, window.location.origin).pathname;
+                    saveScroll(scrollKeyFor(targetPath), link.dataset.preserveScrollTarget);
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

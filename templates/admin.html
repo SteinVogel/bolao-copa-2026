@@ -195,11 +195,11 @@
 <div class="admin-games">
     {% for game in games %}
     {% set result = game.results[0] if game.results else None %}
-    <section class="admin-game">
+    <section class="admin-game" id="admin-game-{{ game.id }}">
         <div class="admin-game-main">
             <div>
                 <span class="admin-field-label">Jogo</span>
-                <form id="game-form-{{ game.id }}" method="POST" action="{{ url_for('update_game', game_id=game.id) }}">
+                <form id="game-form-{{ game.id }}" method="POST" action="{{ url_for('update_game', game_id=game.id) }}" data-preserve-scroll data-preserve-scroll-target="#admin-game-{{ game.id }}">
                     <div class="admin-game-title">
                         <input type="text" class="form-control form-control-sm" name="team_a" value="{{ game.team_a }}" aria-label="Time A" required>
                         <span class="admin-game-versus">vs</span>
@@ -220,7 +220,7 @@
 
             <div>
                 <span class="admin-field-label">Resultado</span>
-                <form method="POST" action="{{ url_for('add_result', game_id=game.id) }}" class="admin-result-form">
+                <form method="POST" action="{{ url_for('add_result', game_id=game.id) }}" class="admin-result-form" data-preserve-scroll data-preserve-scroll-target="#admin-game-{{ game.id }}">
                     <input type="number" class="form-control form-control-sm" name="score_a" value="{{ result.score_a if result else '' }}" min="0" placeholder="A" aria-label="Gols do time A" required>
                     <input type="number" class="form-control form-control-sm" name="score_b" value="{{ result.score_b if result else '' }}" min="0" placeholder="B" aria-label="Gols do time B" required>
                     <button type="submit" class="btn btn-sm btn-success">Salvar resultado</button>

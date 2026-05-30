@@ -421,6 +421,10 @@ def is_game_closed(game):
     return game.date <= get_current_time()
 
 
+def should_move_game_to_end(game, now):
+    return game.date + timedelta(hours=3) <= now
+
+
 def get_current_time():
     return datetime.now(APP_TIMEZONE).replace(tzinfo=None)
 
@@ -439,7 +443,9 @@ def index():
     if current_user.is_admin:
         return redirect(url_for('admin'))
 
+    now = get_current_time()
     games = Game.query.order_by(Game.date).all()
+    games.sort(key=lambda game: (should_move_game_to_end(game, now), game.date))
     user_bets = {
         bet_item.game_id: bet_item
         for bet_item in Bet.query.filter_by(user_id=current_user.id).all()
@@ -448,7 +454,7 @@ def index():
     for game in games:
         game_day = game.date.date()
         grouped_games.setdefault(game_day, []).append(game)
-    return render_template('index.html', grouped_games=grouped_games, user_bets=user_bets, now=get_current_time())
+    return render_template('index.html', grouped_games=grouped_games, user_bets=user_bets, now=now)
 
 
 @app.route('/login', methods=['GET', 'POST'])
