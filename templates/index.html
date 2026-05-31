@@ -1,6 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .game-card {
+        border-width: 2px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .game-card.scored {
+        border-color: #198754;
+        background-color: #eaf7ef;
+        box-shadow: 0 8px 24px rgba(25, 135, 84, 0.1);
+    }
+
+    .game-card.missed {
+        border-color: #dc3545;
+        background-color: #fdecee;
+        box-shadow: 0 8px 24px rgba(220, 53, 69, 0.08);
+    }
+</style>
+
 <h2>Jogos</h2>
 
 {% if not (current_user.champion_pick and current_user.runner_up_pick and current_user.third_place_pick) %}
@@ -26,9 +45,11 @@
 <div class="row">
     {% for game in games %}
     {% set bet = user_bets.get(game.id) %}
+    {% set result = game_results.get(game.id) %}
+    {% set points = bet_points.get(game.id) %}
     {% set closed = game.date <= now %}
     <div class="col-md-4 mb-3" id="game-card-{{ game.id }}">
-        <div class="card">
+        <div class="card game-card{% if points is not none and points > 0 %} scored{% elif points == 0 %} missed{% endif %}">
             <div class="card-body">
                 <h5 class="card-title">{{ game.team_a }} vs {{ game.team_b }}</h5>
                 <p class="card-text mb-2">{{ game.date.strftime('%H:%M') }} - {{ game.phase }}</p>
@@ -44,6 +65,18 @@
                         <span class="badge bg-primary">Palpite: {{ bet.score_a }} - {{ bet.score_b }}</span>
                     {% else %}
                         <span class="badge bg-warning text-dark">Pendente</span>
+                    {% endif %}
+
+                    {% if result %}
+                        <span class="badge bg-dark">Resultado: {{ result.score_a }} - {{ result.score_b }}</span>
+                    {% endif %}
+
+                    {% if points is not none %}
+                        {% if points > 0 %}
+                            <span class="badge bg-success">+{{ points }} pontos</span>
+                        {% else %}
+                            <span class="badge bg-danger">0 pontos</span>
+                        {% endif %}
                     {% endif %}
                 </div>
 

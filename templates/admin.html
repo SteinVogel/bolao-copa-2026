@@ -194,7 +194,7 @@
 <h3 class="mt-4">Jogos e Resultados</h3>
 <div class="admin-games">
     {% for game in games %}
-    {% set result = game.results[0] if game.results else None %}
+    {% set result = game_results.get(game.id) %}
     <section class="admin-game" id="admin-game-{{ game.id }}">
         <div class="admin-game-main">
             <div>
@@ -223,7 +223,9 @@
                 <form method="POST" action="{{ url_for('add_result', game_id=game.id) }}" class="admin-result-form" data-preserve-scroll data-preserve-scroll-target="#admin-game-{{ game.id }}">
                     <input type="number" class="form-control form-control-sm" name="score_a" value="{{ result.score_a if result else '' }}" min="0" placeholder="A" aria-label="Gols do time A" required>
                     <input type="number" class="form-control form-control-sm" name="score_b" value="{{ result.score_b if result else '' }}" min="0" placeholder="B" aria-label="Gols do time B" required>
-                    <button type="submit" class="btn btn-sm btn-success">Salvar resultado</button>
+                    <button type="submit" class="btn btn-sm btn-success">
+                        {% if result %}Atualizar{% else %}Salvar{% endif %}
+                    </button>
                 </form>
             </div>
         </div>

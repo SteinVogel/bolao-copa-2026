@@ -450,11 +450,27 @@ def index():
         bet_item.game_id: bet_item
         for bet_item in Bet.query.filter_by(user_id=current_user.id).all()
     }
+    game_results = {
+        result_item.game_id: result_item
+        for result_item in Result.query.all()
+    }
+    bet_points = {}
+    for game_id, bet_item in user_bets.items():
+        result_item = game_results.get(game_id)
+        if result_item:
+            bet_points[game_id] = calculate_points(bet_item, result_item)
     grouped_games = OrderedDict()
     for game in games:
         game_day = game.date.date()
         grouped_games.setdefault(game_day, []).append(game)
-    return render_template('index.html', grouped_games=grouped_games, user_bets=user_bets, now=now)
+    return render_template(
+        'index.html',
+        grouped_games=grouped_games,
+        user_bets=user_bets,
+        game_results=game_results,
+        bet_points=bet_points,
+        now=now,
+    )
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -651,10 +667,15 @@ def admin():
     if not is_admin_user():
         return redirect(url_for('index'))
     games = Game.query.order_by(Game.date).all()
+    game_results = {
+        result_item.game_id: result_item
+        for result_item in Result.query.all()
+    }
     users = User.query.filter_by(is_admin=False).all()
     return render_template(
         'admin.html',
         games=games,
+        game_results=game_results,
         users=users,
         team_names=get_team_names(),
         official_champion=get_official_champion(),
