@@ -171,6 +171,19 @@ WORLD_CUP_2026_GROUP_STAGE_MATCHES = [
     ('2026-06-27T22:00', 'Grupo L', 'Croácia', 'Gana'),
 ]
 
+PHASE_POINT_WEIGHTS = {
+    'grupos': 1,
+    '1/16 de final': 2,
+    '1/16 final': 2,
+    '1/8 de final': 3,
+    '1/8 final': 3,
+    '1/4 de final': 4,
+    '1/4 final': 4,
+    'semifinal': 5,
+    'disputa do 3o lugar': 6,
+    'final': 7,
+}
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -273,7 +286,19 @@ def migrate_schema():
 create_tables()
 
 
-def calculate_points(bet, result):
+def normalize_phase_text(phase):
+    without_accents = unicodedata.normalize('NFKD', phase).encode('ascii', 'ignore').decode('ascii')
+    return ' '.join(without_accents.lower().split())
+
+
+def get_phase_point_weight(phase):
+    normalized_phase = normalize_phase_text(phase)
+    if normalized_phase.startswith('grupo '):
+        return PHASE_POINT_WEIGHTS['grupos']
+    return PHASE_POINT_WEIGHTS[normalized_phase]
+
+
+def calculate_base_points(bet, result):
     if bet.score_a == result.score_a and bet.score_b == result.score_b:
         return 5
 
@@ -288,14 +313,22 @@ def calculate_points(bet, result):
     return 0
 
 
-def calculate_bet_stats(bet, result):
-    points = calculate_points(bet, result)
+def calculate_points(bet, result, game=None):
+    base_points = calculate_base_points(bet, result)
+    point_weight = get_phase_point_weight(game.phase if game else result.game.phase)
+    return base_points * point_weight
+
+
+def calculate_bet_stats(bet, result, game=None):
+    base_points = calculate_base_points(bet, result)
+    points = calculate_points(bet, result, game)
     return {
         'points': points,
-        'exact_scores': 1 if points == 5 else 0,
-        'correct_outcomes': 1 if points == 3 else 0,
-        'partial_scores': 1 if points == 1 else 0,
-        'errors': 1 if points == 0 else 0,
+        'max_points': 5 * get_phase_point_weight(game.phase if game else result.game.phase),
+        'exact_scores': 1 if base_points == 5 else 0,
+        'correct_outcomes': 1 if base_points == 3 else 0,
+        'partial_scores': 1 if base_points == 1 else 0,
+        'errors': 1 if base_points == 0 else 0,
     }
 
 
@@ -367,6 +400,7 @@ def calculate_user_performance(user):
     partial_scores = 0
     errors = 0
     evaluated_bets = 0
+    max_bet_points = 0
 
     for bet_item in bets:
         result = Result.query.filter_by(game_id=bet_item.game_id).first()
@@ -376,6 +410,7 @@ def calculate_user_performance(user):
         stats = calculate_bet_stats(bet_item, result)
         evaluated_bets += 1
         bet_points += stats['points']
+        max_bet_points += stats['max_points']
         exact_scores += stats['exact_scores']
         correct_outcomes += stats['correct_outcomes']
         partial_scores += stats['partial_scores']
@@ -388,7 +423,6 @@ def calculate_user_performance(user):
         official_third_place,
     )
     total_points = bet_points + final_bonus['total']
-    max_bet_points = evaluated_bets * 5
     max_final_bonus = 0
     if official_champion:
         max_final_bonus += 150

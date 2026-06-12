@@ -102,12 +102,13 @@
     <p>Se uma partida terminar empatada no tempo normal e uma seleção vencer durante a prorrogação, valerá o resultado da prorrogação. Se a partida permanecer empatada mesmo após a prorrogação e for decidida nos pênaltis, o resultado válido continuará sendo o empate ao final da prorrogação.</p>
 
     <h3>Sistema de pontuação</h3>
+    <p>A pontuação de cada jogo é calculada primeiro pela regra base abaixo e, em seguida, multiplicada pelo peso da fase da partida.</p>
     <div class="table-responsive terms-table">
         <table class="table table-sm">
             <thead>
                 <tr>
                     <th>Resultado do palpite</th>
-                    <th class="text-end">Pontuação</th>
+                    <th class="text-end">Pontuação base</th>
                 </tr>
             </thead>
             <tbody>
@@ -130,6 +131,50 @@
             </tbody>
         </table>
     </div>
+
+    <h3>Pesos por fase</h3>
+    <p>Os pontos obtidos em cada jogo serão multiplicados pelo peso correspondente à fase em que a partida for disputada.</p>
+    <div class="table-responsive terms-table">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Fase</th>
+                    <th class="text-end">Peso</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Fase de grupos</td>
+                    <td class="text-end">1</td>
+                </tr>
+                <tr>
+                    <td>1/16 de final</td>
+                    <td class="text-end">2</td>
+                </tr>
+                <tr>
+                    <td>1/8 de final</td>
+                    <td class="text-end">3</td>
+                </tr>
+                <tr>
+                    <td>1/4 de final</td>
+                    <td class="text-end">4</td>
+                </tr>
+                <tr>
+                    <td>Semifinal</td>
+                    <td class="text-end">5</td>
+                </tr>
+                <tr>
+                    <td>Disputa do 3º lugar</td>
+                    <td class="text-end">6</td>
+                </tr>
+                <tr>
+                    <td>Final</td>
+                    <td class="text-end">7</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p>Exemplo: um placar exato na final vale 5 pontos de base multiplicados pelo peso 7, totalizando 35 pontos. Os bônus do pódio final não recebem multiplicador de fase.</p>
 
     <h3>Pontuação bônus do pódio final</h3>
     <div class="table-responsive terms-table">
