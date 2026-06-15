@@ -13,6 +13,12 @@
         box-shadow: 0 8px 24px rgba(25, 135, 84, 0.1);
     }
 
+    .game-card.exact-score {
+        border-color: #d4a017;
+        background-color: #fff7db;
+        box-shadow: 0 8px 24px rgba(212, 160, 23, 0.16);
+    }
+
     .game-card.missed {
         border-color: #dc3545;
         background-color: #fdecee;
@@ -47,9 +53,10 @@
     {% set bet = user_bets.get(game.id) %}
     {% set result = game_results.get(game.id) %}
     {% set points = bet_points.get(game.id) %}
+    {% set exact_score = bet and result and bet.score_a == result.score_a and bet.score_b == result.score_b %}
     {% set closed = game.date <= now %}
     <div class="col-md-4 mb-3" id="game-card-{{ game.id }}">
-        <div class="card game-card{% if points is not none and points > 0 %} scored{% elif points == 0 %} missed{% endif %}">
+        <div class="card game-card{% if exact_score %} exact-score{% elif points is not none and points > 0 %} scored{% elif points == 0 %} missed{% endif %}">
             <div class="card-body">
                 <h5 class="card-title">{{ game.team_a }} vs {{ game.team_b }}</h5>
                 <p class="card-text mb-2">{{ game.date.strftime('%H:%M') }} - {{ game.phase }}</p>
