@@ -10,6 +10,19 @@
         margin-bottom: 1.25rem;
     }
 
+    .stats-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .stats-actions svg {
+        height: 1rem;
+        margin-right: 0.35rem;
+        vertical-align: -0.125em;
+        width: 1rem;
+    }
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -76,9 +89,12 @@
             display: block;
         }
 
-        .stats-header .btn {
+        .stats-actions {
             margin-top: 0.75rem;
-            width: 100%;
+        }
+
+        .stats-actions .btn {
+            flex: 1 1 100%;
         }
 
         .stats-grid {
@@ -91,6 +107,76 @@
             padding: 0.9rem;
         }
     }
+
+    @media print {
+        @page {
+            size: landscape;
+            margin: 10mm;
+        }
+
+        body {
+            background: #fff;
+            color: #000;
+            font-size: 9pt;
+        }
+
+        .navbar,
+        .stats-actions {
+            display: none !important;
+        }
+
+        body > .container {
+            margin: 0 !important;
+            max-width: none !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        .stats-header {
+            margin-bottom: 8mm;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 4mm;
+        }
+
+        .stats-card {
+            border-color: #adb5bd;
+            box-shadow: none;
+            min-height: 0;
+            padding: 3mm;
+            break-inside: avoid;
+        }
+
+        .stats-value {
+            font-size: 18pt;
+        }
+
+        .stats-section-title {
+            font-size: 14pt;
+            margin-top: 8mm;
+        }
+
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        .stats-table {
+            font-size: 7.5pt;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 1.5mm;
+        }
+
+        .stats-table tr {
+            break-inside: avoid;
+        }
+    }
 </style>
 
 <div class="stats-header">
@@ -98,7 +184,16 @@
         <h2 class="mb-1">Estatisticas do bolao</h2>
         <p class="text-muted mb-0">Jogos finalizados sao os jogos com resultado cadastrado.</p>
     </div>
-    <a href="{{ url_for('admin') }}" class="btn btn-outline-primary">Voltar ao admin</a>
+    <div class="stats-actions">
+        <button type="button" class="btn btn-primary" onclick="window.print()">
+            <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M5 1a1 1 0 0 0-1 1v3h8V2a1 1 0 0 0-1-1H5Zm6 1v3H5V2h6Z"/>
+                <path d="M3 6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1h1a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H3Zm9 6v2H4v-4h8v2Zm1-4.5a.5.5 0 1 1 0 1 .5.5 0 0 1 0-1Z"/>
+            </svg>
+            Exportar PDF
+        </button>
+        <a href="{{ url_for('admin') }}" class="btn btn-outline-primary">Voltar ao admin</a>
+    </div>
 </div>
 
 <div class="stats-grid">
