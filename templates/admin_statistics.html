@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .stats-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .stats-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(33, 37, 41, 0.06);
+        min-height: 116px;
+        padding: 1rem;
+    }
+
+    .stats-card.featured {
+        border-color: rgba(13, 110, 253, 0.28);
+        background: rgba(13, 110, 253, 0.06);
+    }
+
+    .stats-label {
+        color: #6c757d;
+        font-size: 0.86rem;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .stats-value {
+        font-size: clamp(1.75rem, 4vw, 2.35rem);
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.35rem;
+    }
+
+    .stats-note {
+        color: #6c757d;
+        font-size: 0.86rem;
+        margin: 0;
+    }
+
+    .stats-game-name {
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 0.35rem;
+    }
+
+    .stats-section-title {
+        margin-top: 1.75rem;
+    }
+
+    .stats-table {
+        min-width: 900px;
+    }
+
+    @media (max-width: 991.98px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .stats-header {
+            display: block;
+        }
+
+        .stats-header .btn {
+            margin-top: 0.75rem;
+            width: 100%;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .stats-card {
+            min-height: auto;
+            padding: 0.9rem;
+        }
+    }
+</style>
+
+<div class="stats-header">
+    <div>
+        <h2 class="mb-1">Estatisticas do bolao</h2>
+        <p class="text-muted mb-0">Jogos finalizados sao os jogos com resultado cadastrado.</p>
+    </div>
+    <a href="{{ url_for('admin') }}" class="btn btn-outline-primary">Voltar ao admin</a>
+</div>
+
+<div class="stats-grid">
+    <section class="stats-card featured">
+        <div class="stats-label">Participantes</div>
+        <div class="stats-value">{{ stats.total_participants }}</div>
+        <p class="stats-note">{{ stats.active_participants }} ativos com pelo menos 1 palpite.</p>
+    </section>
+
+    <section class="stats-card">
+        <div class="stats-label">100% nos finalizados</div>
+        <div class="stats-value">{{ stats.all_evaluated_participants }}</div>
+        <p class="stats-note">Palpitaram em todos os {{ stats.evaluated_games_count }} jogos com resultado.</p>
+    </section>
+
+    <section class="stats-card">
+        <div class="stats-label">Media de jogos palpitados</div>
+        <div class="stats-value">{{ stats.average_bets }}</div>
+        <p class="stats-note">Media por participante cadastrado.</p>
+    </section>
+
+    <section class="stats-card">
+        <div class="stats-label">Totais de acerto</div>
+        <div class="stats-value">{{ stats.totals.exact_scores }}</div>
+        <p class="stats-note">
+            {{ stats.totals.correct_outcomes }} vencedores/empates,
+            {{ stats.totals.partial_scores }} gols de um lado,
+            {{ stats.totals.errors }} erros.
+        </p>
+    </section>
+
+    <section class="stats-card">
+        <div class="stats-label">Mais placares exatos</div>
+        {% if stats.most_exact_game %}
+            <div class="stats-game-name">{{ stats.most_exact_game.label }}</div>
+            <p class="stats-note">{{ stats.most_exact_game.exact_scores }} placares exatos.</p>
+        {% else %}
+            <div class="stats-game-name">Sem jogos apurados</div>
+            <p class="stats-note">Cadastre resultados para calcular.</p>
+        {% endif %}
+    </section>
+
+    <section class="stats-card">
+        <div class="stats-label">Menos placares exatos</div>
+        {% if stats.least_exact_game %}
+            <div class="stats-game-name">{{ stats.least_exact_game.label }}</div>
+            <p class="stats-note">{{ stats.least_exact_game.exact_scores }} placares exatos.</p>
+        {% else %}
+            <div class="stats-game-name">Sem jogos apurados</div>
+            <p class="stats-note">Cadastre resultados para calcular.</p>
+        {% endif %}
+    </section>
+
+    <section class="stats-card">
+        <div class="stats-label">Jogo mais facil</div>
+        {% if stats.easiest_game %}
+            <div class="stats-game-name">{{ stats.easiest_game.label }}</div>
+            <p class="stats-note">Media de {{ stats.easiest_game.average_points }} pontos por palpite.</p>
+        {% else %}
+            <div class="stats-game-name">Sem palpites apurados</div>
+            <p class="stats-note">Aguardando jogos com resultado e palpites.</p>
+        {% endif %}
+    </section>
+
+    <section class="stats-card">
+        <div class="stats-label">Jogo mais dificil</div>
+        {% if stats.hardest_game %}
+            <div class="stats-game-name">{{ stats.hardest_game.label }}</div>
+            <p class="stats-note">Media de {{ stats.hardest_game.average_points }} pontos por palpite.</p>
+        {% else %}
+            <div class="stats-game-name">Sem palpites apurados</div>
+            <p class="stats-note">Aguardando jogos com resultado e palpites.</p>
+        {% endif %}
+    </section>
+</div>
+
+<h3 class="stats-section-title">Placares mais apostados por jogo</h3>
+{% if stats.game_stats %}
+<div class="table-responsive">
+    <table class="table table-sm align-middle stats-table">
+        <thead>
+            <tr>
+                <th>Jogo</th>
+                <th>Data</th>
+                <th>Resultado</th>
+                <th class="text-end">Palpites</th>
+                <th class="text-end">Placar mais apostado</th>
+                <th class="text-end">Exatos</th>
+                <th class="text-end">Venc./emp.</th>
+                <th class="text-end">Gols lado</th>
+                <th class="text-end">Erros</th>
+                <th class="text-end">Media pontos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for game in stats.game_stats %}
+            <tr>
+                <td>
+                    <strong>{{ game.label }}</strong>
+                    <div class="text-muted small">{{ game.game.phase }}</div>
+                </td>
+                <td>{{ game.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ game.result.score_a }} - {{ game.result.score_b }}</td>
+                <td class="text-end">{{ game.bets_count }}</td>
+                <td class="text-end">
+                    {% if game.most_common_score %}
+                        {{ game.most_common_score }}
+                        <span class="text-muted small">({{ game.most_common_score_count }})</span>
+                    {% else %}
+                        <span class="text-muted">Sem palpites</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">{{ game.exact_scores }}</td>
+                <td class="text-end">{{ game.correct_outcomes }}</td>
+                <td class="text-end">{{ game.partial_scores }}</td>
+                <td class="text-end">{{ game.errors }}</td>
+                <td class="text-end">{{ game.average_points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">Nenhum jogo com resultado cadastrado ainda.</div>
+{% endif %}
+{% endblock %}

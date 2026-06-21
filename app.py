@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import os
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 import unicodedata
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -451,6 +451,105 @@ def calculate_user_performance(user):
     }
 
 
+def format_game_label(game):
+    return f'{game.team_a} vs {game.team_b}'
+
+
+def get_admin_statistics():
+    users = User.query.filter_by(is_admin=False).all()
+    games = Game.query.order_by(Game.date).all()
+    bets = Bet.query.all()
+    results = Result.query.all()
+
+    user_count = len(users)
+    user_ids = {user.id for user in users}
+    evaluated_game_ids = {result.game_id for result in results}
+    evaluated_games = [game for game in games if game.id in evaluated_game_ids]
+
+    bets_by_user = {user.id: [] for user in users}
+    bets_by_game = {game.id: [] for game in games}
+    for bet_item in bets:
+        if bet_item.user_id in user_ids:
+            bets_by_user.setdefault(bet_item.user_id, []).append(bet_item)
+            bets_by_game.setdefault(bet_item.game_id, []).append(bet_item)
+
+    result_by_game = {result.game_id: result for result in results}
+    active_participants = sum(1 for user_bets in bets_by_user.values() if user_bets)
+    all_evaluated_participants = 0
+    if evaluated_game_ids:
+        all_evaluated_participants = sum(
+            1
+            for user_bets in bets_by_user.values()
+            if evaluated_game_ids.issubset({bet_item.game_id for bet_item in user_bets})
+        )
+
+    average_bets = round(sum(len(user_bets) for user_bets in bets_by_user.values()) / user_count, 1) if user_count else 0
+
+    totals = {
+        'exact_scores': 0,
+        'correct_outcomes': 0,
+        'partial_scores': 0,
+        'errors': 0,
+    }
+    game_stats = []
+    for game in evaluated_games:
+        result = result_by_game[game.id]
+        game_bets = bets_by_game.get(game.id, [])
+        score_counter = Counter((bet_item.score_a, bet_item.score_b) for bet_item in game_bets)
+        stats = {
+            'game': game,
+            'label': format_game_label(game),
+            'date': game.date,
+            'result': result,
+            'bets_count': len(game_bets),
+            'exact_scores': 0,
+            'correct_outcomes': 0,
+            'partial_scores': 0,
+            'errors': 0,
+            'points': 0,
+            'average_points': 0,
+            'most_common_score': None,
+            'most_common_score_count': 0,
+        }
+
+        for bet_item in game_bets:
+            bet_stats = calculate_bet_stats(bet_item, result, game)
+            stats['points'] += bet_stats['points']
+            stats['exact_scores'] += bet_stats['exact_scores']
+            stats['correct_outcomes'] += bet_stats['correct_outcomes']
+            stats['partial_scores'] += bet_stats['partial_scores']
+            stats['errors'] += bet_stats['errors']
+
+        if game_bets:
+            stats['average_points'] = round(stats['points'] / len(game_bets), 1)
+        if score_counter:
+            most_common_score, most_common_count = score_counter.most_common(1)[0]
+            stats['most_common_score'] = f'{most_common_score[0]} - {most_common_score[1]}'
+            stats['most_common_score_count'] = most_common_count
+
+        totals['exact_scores'] += stats['exact_scores']
+        totals['correct_outcomes'] += stats['correct_outcomes']
+        totals['partial_scores'] += stats['partial_scores']
+        totals['errors'] += stats['errors']
+        game_stats.append(stats)
+
+    games_with_bets = [stats for stats in game_stats if stats['bets_count']]
+
+    return {
+        'total_participants': user_count,
+        'active_participants': active_participants,
+        'all_evaluated_participants': all_evaluated_participants,
+        'average_bets': average_bets,
+        'evaluated_games_count': len(evaluated_games),
+        'most_exact_game': max(game_stats, key=lambda stats: stats['exact_scores'], default=None),
+        'least_exact_game': min(game_stats, key=lambda stats: stats['exact_scores'], default=None),
+        'easiest_game': max(games_with_bets, key=lambda stats: stats['average_points'], default=None),
+        'hardest_game': min(games_with_bets, key=lambda stats: stats['average_points'], default=None),
+        'totals': totals,
+        'game_stats': sorted(game_stats, key=lambda stats: stats['date']),
+    }
+
+
 def is_game_closed(game):
     return game.date <= get_current_time()
 
@@ -716,6 +815,15 @@ def admin():
         official_runner_up=get_official_runner_up(),
         official_third_place=get_official_third_place(),
     )
+
+
+@app.route('/admin/estatisticas')
+@login_required
+def admin_statistics():
+    if not is_admin_user():
+        return redirect(url_for('index'))
+
+    return render_template('admin_statistics.html', stats=get_admin_statistics())
 
 
 @app.route('/admin/update_official_champion', methods=['POST'])
