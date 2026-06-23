@@ -455,6 +455,103 @@ def format_game_label(game):
     return f'{game.team_a} vs {game.team_b}'
 
 
+def calculate_ranking_history_statistics(users, evaluated_games, bets_by_game, result_by_game):
+    if not users or not evaluated_games:
+        return {
+            'updates_count': 0,
+            'most_leaderships': [],
+            'most_podiums': [],
+            'longest_leadership_streaks': [],
+        }
+
+    performance_by_user = {
+        user.id: {
+            'user': user,
+            'points': 0,
+            'exact_scores': 0,
+            'correct_outcomes': 0,
+            'partial_scores': 0,
+            'errors': 0,
+        }
+        for user in users
+    }
+    leaderships = Counter()
+    podiums = Counter()
+    current_leadership_streaks = Counter()
+    longest_leadership_streaks = Counter()
+    games_by_date = OrderedDict()
+
+    for game in sorted(evaluated_games, key=lambda item: (item.date, item.id)):
+        games_by_date.setdefault(game.date, []).append(game)
+
+    for simultaneous_games in games_by_date.values():
+        for game in simultaneous_games:
+            result = result_by_game[game.id]
+            for bet_item in bets_by_game.get(game.id, []):
+                if bet_item.user_id not in performance_by_user:
+                    continue
+                bet_stats = calculate_bet_stats(bet_item, result, game)
+                user_performance = performance_by_user[bet_item.user_id]
+                user_performance['points'] += bet_stats['points']
+                user_performance['exact_scores'] += bet_stats['exact_scores']
+                user_performance['correct_outcomes'] += bet_stats['correct_outcomes']
+                user_performance['partial_scores'] += bet_stats['partial_scores']
+                user_performance['errors'] += bet_stats['errors']
+
+        ranking_snapshot = sorted(
+            performance_by_user.values(),
+            key=lambda item: (
+                -item['points'],
+                -item['exact_scores'],
+                -item['correct_outcomes'],
+                -item['partial_scores'],
+                item['errors'],
+                normalize_sort_text(item['user'].username),
+            ),
+        )
+        leader_id = ranking_snapshot[0]['user'].id
+        leaderships[leader_id] += 1
+
+        for user in users:
+            if user.id == leader_id:
+                current_leadership_streaks[user.id] += 1
+                longest_leadership_streaks[user.id] = max(
+                    longest_leadership_streaks[user.id],
+                    current_leadership_streaks[user.id],
+                )
+            else:
+                current_leadership_streaks[user.id] = 0
+
+        for podium_item in ranking_snapshot[:3]:
+            podiums[podium_item['user'].id] += 1
+
+    updates_count = len(games_by_date)
+
+    def build_top_three(counter):
+        ranked_users = sorted(
+            users,
+            key=lambda user: (
+                -counter[user.id],
+                normalize_sort_text(user.username),
+            ),
+        )
+        return [
+            {
+                'user': user,
+                'count': counter[user.id],
+                'percentage': round((counter[user.id] / updates_count) * 100, 1),
+            }
+            for user in ranked_users[:3]
+        ]
+
+    return {
+        'updates_count': updates_count,
+        'most_leaderships': build_top_three(leaderships),
+        'most_podiums': build_top_three(podiums),
+        'longest_leadership_streaks': build_top_three(longest_leadership_streaks),
+    }
+
+
 def get_admin_statistics():
     users = User.query.filter_by(is_admin=False).all()
     games = Game.query.order_by(Game.date).all()
@@ -534,6 +631,12 @@ def get_admin_statistics():
         game_stats.append(stats)
 
     games_with_bets = [stats for stats in game_stats if stats['bets_count']]
+    ranking_history = calculate_ranking_history_statistics(
+        users,
+        evaluated_games,
+        bets_by_game,
+        result_by_game,
+    )
 
     return {
         'total_participants': user_count,
@@ -547,6 +650,7 @@ def get_admin_statistics():
         'hardest_game': min(games_with_bets, key=lambda stats: stats['average_points'], default=None),
         'totals': totals,
         'game_stats': sorted(game_stats, key=lambda stats: stats['date']),
+        'ranking_history': ranking_history,
     }
 
 

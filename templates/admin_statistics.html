@@ -74,6 +74,63 @@
         margin-top: 1.75rem;
     }
 
+    .ranking-history-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .ranking-history-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(33, 37, 41, 0.06);
+        padding: 1rem;
+    }
+
+    .ranking-history-card h4 {
+        font-size: 1rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+
+    .ranking-history-list {
+        list-style: none;
+        margin: 1rem 0 0;
+        padding: 0;
+    }
+
+    .ranking-history-item {
+        align-items: center;
+        border-top: 1px solid #e9ecef;
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: 2rem minmax(0, 1fr) auto;
+        padding: 0.75rem 0;
+    }
+
+    .ranking-history-position {
+        color: #6c757d;
+        font-size: 1.1rem;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .ranking-history-name {
+        font-weight: 700;
+    }
+
+    .ranking-history-result {
+        font-weight: 800;
+        text-align: right;
+    }
+
+    .ranking-history-result small {
+        color: #6c757d;
+        display: block;
+        font-weight: 400;
+    }
+
     .stats-table {
         min-width: 900px;
     }
@@ -81,6 +138,10 @@
     @media (max-width: 991.98px) {
         .stats-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .ranking-history-grid {
+            grid-template-columns: 1fr;
         }
     }
 
@@ -141,6 +202,11 @@
             gap: 4mm;
         }
 
+        .ranking-history-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4mm;
+        }
+
         .stats-card {
             border-color: #adb5bd;
             box-shadow: none;
@@ -174,6 +240,11 @@
         }
 
         .stats-table tr {
+            break-inside: avoid;
+        }
+
+        .ranking-history-card {
+            box-shadow: none;
             break-inside: avoid;
         }
     }
@@ -269,6 +340,68 @@
         {% endif %}
     </section>
 </div>
+
+<h3 class="stats-section-title">Historico do ranking</h3>
+{% if stats.ranking_history.updates_count %}
+<p class="text-muted">
+    {{ stats.ranking_history.updates_count }} atualizacoes apuradas.
+    Jogos no mesmo horario contam como uma unica atualizacao.
+</p>
+<div class="ranking-history-grid">
+    <section class="ranking-history-card">
+        <h4>Mais vezes na lideranca</h4>
+        <p class="stats-note">Primeiro colocado ao final de cada atualizacao.</p>
+        <ol class="ranking-history-list">
+            {% for item in stats.ranking_history.most_leaderships %}
+            <li class="ranking-history-item">
+                <span class="ranking-history-position">{{ loop.index }}º</span>
+                <span class="ranking-history-name">{{ item.user.username }}</span>
+                <span class="ranking-history-result">
+                    {{ item.count }} vezes
+                    <small>{{ item.percentage }}%</small>
+                </span>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <section class="ranking-history-card">
+        <h4>Mais tempo no podio</h4>
+        <p class="stats-note">Presencas entre os tres primeiros colocados.</p>
+        <ol class="ranking-history-list">
+            {% for item in stats.ranking_history.most_podiums %}
+            <li class="ranking-history-item">
+                <span class="ranking-history-position">{{ loop.index }}º</span>
+                <span class="ranking-history-name">{{ item.user.username }}</span>
+                <span class="ranking-history-result">
+                    {{ item.count }} vezes
+                    <small>{{ item.percentage }}%</small>
+                </span>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <section class="ranking-history-card">
+        <h4>Maior sequencia na lideranca</h4>
+        <p class="stats-note">Atualizacoes consecutivas em primeiro lugar.</p>
+        <ol class="ranking-history-list">
+            {% for item in stats.ranking_history.longest_leadership_streaks %}
+            <li class="ranking-history-item">
+                <span class="ranking-history-position">{{ loop.index }}º</span>
+                <span class="ranking-history-name">{{ item.user.username }}</span>
+                <span class="ranking-history-result">
+                    {{ item.count }} seguidas
+                    <small>{{ item.percentage }}% do historico</small>
+                </span>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+</div>
+{% else %}
+<div class="alert alert-info">Nenhum historico de ranking disponivel ainda.</div>
+{% endif %}
 
 <h3 class="stats-section-title">Placares mais apostados por jogo</h3>
 {% if stats.game_stats %}
