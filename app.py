@@ -393,6 +393,9 @@ def calculate_user_performance(user):
     official_runner_up = get_official_runner_up()
     official_third_place = get_official_third_place()
     bets = Bet.query.filter_by(user_id=user.id).all()
+    total_games = Game.query.count()
+    evaluated_games = db.session.query(db.func.count(db.distinct(Result.game_id))).scalar() or 0
+    pending_games = total_games - evaluated_games
 
     bet_points = 0
     exact_scores = 0
@@ -446,6 +449,9 @@ def calculate_user_performance(user):
         'errors': errors,
         'evaluated_bets': evaluated_bets,
         'total_bets': len(bets),
+        'evaluated_games': evaluated_games,
+        'total_games': total_games,
+        'pending_games': pending_games,
         'success_rate': success_rate,
         'max_points': max_points,
     }

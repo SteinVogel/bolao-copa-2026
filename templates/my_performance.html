@@ -138,9 +138,9 @@
 </div>
 
 <div class="alert alert-light border mt-4 mb-0">
-    {{ performance.evaluated_bets }} palpites já têm resultado cadastrado.
-    {% if performance.total_bets > performance.evaluated_bets %}
-        {{ performance.total_bets - performance.evaluated_bets }} ainda aguardam resultado.
+    {{ performance.evaluated_games }} jogos já têm resultado cadastrado.
+    {% if performance.pending_games > 0 %}
+        {{ performance.pending_games }} ainda aguardam resultado.
     {% endif %}
 </div>
 {% endblock %}

@@ -252,8 +252,8 @@
 
 <div class="stats-header">
     <div>
-        <h2 class="mb-1">Estatisticas do bolao</h2>
-        <p class="text-muted mb-0">Jogos finalizados sao os jogos com resultado cadastrado.</p>
+        <h2 class="mb-1">Estatísticas do bolão</h2>
+        <p class="text-muted mb-0">Jogos finalizados são os jogos com resultado cadastrado.</p>
     </div>
     <div class="stats-actions">
         <button type="button" class="btn btn-primary" onclick="window.print()">
@@ -281,9 +281,9 @@
     </section>
 
     <section class="stats-card">
-        <div class="stats-label">Media de jogos palpitados</div>
+        <div class="stats-label">Média de jogos palpitados</div>
         <div class="stats-value">{{ stats.average_bets }}</div>
-        <p class="stats-note">Media por participante cadastrado.</p>
+        <p class="stats-note">Média por participante cadastrado.</p>
     </section>
 
     <section class="stats-card">
@@ -319,10 +319,10 @@
     </section>
 
     <section class="stats-card">
-        <div class="stats-label">Jogo mais facil</div>
+        <div class="stats-label">Jogo mais fácil</div>
         {% if stats.easiest_game %}
             <div class="stats-game-name">{{ stats.easiest_game.label }}</div>
-            <p class="stats-note">Media de {{ stats.easiest_game.average_points }} pontos por palpite.</p>
+            <p class="stats-note">Média de {{ stats.easiest_game.average_points }} pontos por palpite.</p>
         {% else %}
             <div class="stats-game-name">Sem palpites apurados</div>
             <p class="stats-note">Aguardando jogos com resultado e palpites.</p>
@@ -330,10 +330,10 @@
     </section>
 
     <section class="stats-card">
-        <div class="stats-label">Jogo mais dificil</div>
+        <div class="stats-label">Jogo mais difícil</div>
         {% if stats.hardest_game %}
             <div class="stats-game-name">{{ stats.hardest_game.label }}</div>
-            <p class="stats-note">Media de {{ stats.hardest_game.average_points }} pontos por palpite.</p>
+            <p class="stats-note">Média de {{ stats.hardest_game.average_points }} pontos por palpite.</p>
         {% else %}
             <div class="stats-game-name">Sem palpites apurados</div>
             <p class="stats-note">Aguardando jogos com resultado e palpites.</p>
@@ -341,16 +341,16 @@
     </section>
 </div>
 
-<h3 class="stats-section-title">Historico do ranking</h3>
+<h3 class="stats-section-title">Histórico do ranking</h3>
 {% if stats.ranking_history.updates_count %}
 <p class="text-muted">
-    {{ stats.ranking_history.updates_count }} atualizacoes apuradas.
-    Jogos no mesmo horario contam como uma unica atualizacao.
+    {{ stats.ranking_history.updates_count }} atualizações apuradas.
+    Jogos no mesmo horário contam como uma única atualização.
 </p>
 <div class="ranking-history-grid">
     <section class="ranking-history-card">
-        <h4>Mais vezes na lideranca</h4>
-        <p class="stats-note">Primeiro colocado ao final de cada atualizacao.</p>
+        <h4>Mais vezes na liderança</h4>
+        <p class="stats-note">Primeiro colocado ao final de cada atualização.</p>
         <ol class="ranking-history-list">
             {% for item in stats.ranking_history.most_leaderships %}
             <li class="ranking-history-item">
@@ -366,8 +366,8 @@
     </section>
 
     <section class="ranking-history-card">
-        <h4>Mais tempo no podio</h4>
-        <p class="stats-note">Presencas entre os tres primeiros colocados.</p>
+        <h4>Mais tempo no pódio</h4>
+        <p class="stats-note">Presenças entre os três primeiros colocados.</p>
         <ol class="ranking-history-list">
             {% for item in stats.ranking_history.most_podiums %}
             <li class="ranking-history-item">
@@ -383,8 +383,8 @@
     </section>
 
     <section class="ranking-history-card">
-        <h4>Maior sequencia na lideranca</h4>
-        <p class="stats-note">Atualizacoes consecutivas em primeiro lugar.</p>
+        <h4>Maior sequência na liderança</h4>
+        <p class="stats-note">Atualizações consecutivas em primeiro lugar.</p>
         <ol class="ranking-history-list">
             {% for item in stats.ranking_history.longest_leadership_streaks %}
             <li class="ranking-history-item">
@@ -392,7 +392,7 @@
                 <span class="ranking-history-name">{{ item.user.username }}</span>
                 <span class="ranking-history-result">
                     {{ item.count }} seguidas
-                    <small>{{ item.percentage }}% do historico</small>
+                    <small>{{ item.percentage }}% do histórico</small>
                 </span>
             </li>
             {% endfor %}
@@ -400,7 +400,7 @@
     </section>
 </div>
 {% else %}
-<div class="alert alert-info">Nenhum historico de ranking disponivel ainda.</div>
+<div class="alert alert-info">Nenhum histórico de ranking disponível ainda.</div>
 {% endif %}
 
 <h3 class="stats-section-title">Placares mais apostados por jogo</h3>
@@ -418,7 +418,7 @@
                 <th class="text-end">Venc./emp.</th>
                 <th class="text-end">Gols lado</th>
                 <th class="text-end">Erros</th>
-                <th class="text-end">Media pontos</th>
+                <th class="text-end">Média pontos</th>
             </tr>
         </thead>
         <tbody>
