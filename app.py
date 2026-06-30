@@ -457,6 +457,235 @@ def calculate_user_performance(user):
     }
 
 
+def percentage(part, whole):
+    return round((part / whole) * 100, 1) if whole else 0
+
+
+def calculate_longest_streak(values, predicate):
+    longest = 0
+    current = 0
+    for value in values:
+        if predicate(value):
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 0
+    return longest
+
+
+def calculate_participant_report(user, games=None, bets=None, results=None, ranking_position=None):
+    games = games if games is not None else Game.query.order_by(Game.date).all()
+    user_bets = bets if bets is not None else Bet.query.filter_by(user_id=user.id).all()
+    results = results if results is not None else Result.query.all()
+
+    bets_by_game = {bet_item.game_id: bet_item for bet_item in user_bets}
+    result_by_game = {result.game_id: result for result in results}
+    evaluated_games = [game for game in games if game.id in result_by_game]
+    performance = calculate_user_performance(user)
+
+    timeline = []
+    total_possible_all_evaluated = 0
+    total_possible_made_bets = 0
+    points_from_made_bets = 0
+    running_points = 0
+    phase_stats = OrderedDict()
+
+    for game in games:
+        bet_item = bets_by_game.get(game.id)
+        result = result_by_game.get(game.id)
+        max_points = 0
+        points = None
+        base_points = None
+        outcome = 'Pendente'
+        status = 'pending'
+
+        if result:
+            max_points = 5 * get_phase_point_weight(game.phase)
+            total_possible_all_evaluated += max_points
+            if bet_item:
+                bet_stats = calculate_bet_stats(bet_item, result, game)
+                points = bet_stats['points']
+                base_points = calculate_base_points(bet_item, result)
+                total_possible_made_bets += max_points
+                points_from_made_bets += points
+                running_points += points
+                if base_points == 5:
+                    outcome = 'Placar exato'
+                    status = 'exact'
+                elif base_points == 3:
+                    outcome = 'Vencedor/empate'
+                    status = 'outcome'
+                elif base_points == 1:
+                    outcome = 'Gol de um lado'
+                    status = 'partial'
+                else:
+                    outcome = 'Erro'
+                    status = 'error'
+            else:
+                points = 0
+                outcome = 'Sem palpite'
+                status = 'missing'
+
+            phase_key = game.phase
+            if phase_key not in phase_stats:
+                phase_stats[phase_key] = {
+                    'phase': phase_key,
+                    'games': 0,
+                    'bets': 0,
+                    'points': 0,
+                    'possible_points_all': 0,
+                    'possible_points_bets': 0,
+                    'success_rate_all': 0,
+                    'success_rate_bets': 0,
+                }
+            phase_stats[phase_key]['games'] += 1
+            phase_stats[phase_key]['possible_points_all'] += max_points
+            if bet_item:
+                phase_stats[phase_key]['bets'] += 1
+                phase_stats[phase_key]['points'] += points
+                phase_stats[phase_key]['possible_points_bets'] += max_points
+
+        timeline.append({
+            'game': game,
+            'bet': bet_item,
+            'result': result,
+            'points': points,
+            'max_points': max_points,
+            'base_points': base_points,
+            'outcome': outcome,
+            'status': status,
+            'running_points': running_points,
+        })
+
+    for stats in phase_stats.values():
+        stats['success_rate_all'] = percentage(stats['points'], stats['possible_points_all'])
+        stats['success_rate_bets'] = percentage(stats['points'], stats['possible_points_bets'])
+
+    evaluated_timeline = [item for item in timeline if item['result']]
+    best_game = max(
+        [item for item in evaluated_timeline if item['bet']],
+        key=lambda item: (item['points'], item['game'].date),
+        default=None,
+    )
+    worst_phase = min(
+        [stats for stats in phase_stats.values() if stats['possible_points_all']],
+        key=lambda stats: (stats['success_rate_all'], stats['phase']),
+        default=None,
+    )
+    best_phase = max(
+        [stats for stats in phase_stats.values() if stats['possible_points_all']],
+        key=lambda stats: (stats['success_rate_all'], stats['phase']),
+        default=None,
+    )
+
+    missing_evaluated = [item for item in evaluated_timeline if not item['bet']]
+    pending_bets = [item for item in timeline if item['bet'] and not item['result']]
+
+    return {
+        'user': user,
+        'ranking_position': ranking_position,
+        'performance': performance,
+        'timeline': timeline,
+        'phase_stats': list(phase_stats.values()),
+        'summary': {
+            'total_games': len(games),
+            'evaluated_games': len(evaluated_games),
+            'total_bets': len(user_bets),
+            'evaluated_bets': performance['evaluated_bets'],
+            'betting_rate_total': percentage(len(user_bets), len(games)),
+            'betting_rate_evaluated': percentage(performance['evaluated_bets'], len(evaluated_games)),
+            'success_rate_made_bets': percentage(points_from_made_bets, total_possible_made_bets),
+            'success_rate_all_evaluated': percentage(points_from_made_bets, total_possible_all_evaluated),
+            'points_from_made_bets': points_from_made_bets,
+            'possible_points_made_bets': total_possible_made_bets,
+            'possible_points_all_evaluated': total_possible_all_evaluated,
+            'average_points_per_evaluated_bet': round(points_from_made_bets / performance['evaluated_bets'], 1) if performance['evaluated_bets'] else 0,
+            'missing_evaluated_count': len(missing_evaluated),
+            'pending_bets_count': len(pending_bets),
+        },
+        'streaks': {
+            'scoring': calculate_longest_streak(evaluated_timeline, lambda item: item['bet'] and item['points'] > 0),
+            'exact': calculate_longest_streak(evaluated_timeline, lambda item: item['base_points'] == 5),
+            'without_points': calculate_longest_streak(evaluated_timeline, lambda item: not item['bet'] or item['points'] == 0),
+            'bets_made': calculate_longest_streak(timeline, lambda item: bool(item['bet'])),
+        },
+        'highlights': {
+            'best_game': best_game,
+            'best_phase': best_phase,
+            'worst_phase': worst_phase,
+            'missing_evaluated': missing_evaluated,
+            'pending_bets': pending_bets,
+        },
+        'final_picks': {
+            'champion': user.champion_pick,
+            'runner_up': user.runner_up_pick,
+            'third_place': user.third_place_pick,
+            'official_champion': get_official_champion(),
+            'official_runner_up': get_official_runner_up(),
+            'official_third_place': get_official_third_place(),
+        },
+    }
+
+
+def calculate_ranking_positions(users):
+    ranking_data = [{'user': user, **calculate_user_performance(user)} for user in users]
+    ranking_data.sort(
+        key=lambda item: (
+            item['points'],
+            item['exact_scores'],
+            item['correct_outcomes'],
+            item['partial_scores'],
+            -item['errors'],
+        ),
+        reverse=True,
+    )
+    return {
+        item['user'].id: index
+        for index, item in enumerate(ranking_data, start=1)
+    }
+
+
+def get_participant_reports(selected_user_id=None):
+    users = User.query.filter_by(is_admin=False).order_by(User.username).all()
+    games = Game.query.order_by(Game.date).all()
+    results = Result.query.all()
+    bets = Bet.query.all()
+    user_ids = {user.id for user in users}
+    bets_by_user = {user.id: [] for user in users}
+
+    for bet_item in bets:
+        if bet_item.user_id in user_ids:
+            bets_by_user.setdefault(bet_item.user_id, []).append(bet_item)
+
+    ranking_position_by_user = calculate_ranking_positions(users)
+
+    consolidated = [
+        calculate_participant_report(
+            user,
+            games=games,
+            bets=bets_by_user.get(user.id, []),
+            results=results,
+            ranking_position=ranking_position_by_user.get(user.id),
+        )
+        for user in users
+    ]
+
+    selected_report = None
+    if selected_user_id:
+        selected_report = next(
+            (report for report in consolidated if report['user'].id == selected_user_id),
+            None,
+        )
+    elif consolidated:
+        selected_report = consolidated[0]
+
+    return {
+        'users': users,
+        'consolidated': consolidated,
+        'selected_report': selected_report,
+    }
+
+
 def format_game_label(game):
     return f'{game.team_a} vs {game.team_b}'
 
@@ -904,6 +1133,27 @@ def my_performance():
     return render_template('my_performance.html', performance=performance)
 
 
+@app.route('/meu-relatorio')
+@login_required
+def my_report():
+    if current_user.is_admin:
+        return redirect(url_for('admin_participant_reports'))
+
+    users = User.query.filter_by(is_admin=False).all()
+    ranking_positions = calculate_ranking_positions(users)
+    report = calculate_participant_report(
+        current_user,
+        ranking_position=ranking_positions.get(current_user.id),
+    )
+    return render_template(
+        'participant_report.html',
+        admin_view=False,
+        selected_report=report,
+        consolidated=[],
+        users=[],
+    )
+
+
 @app.route('/admin')
 @login_required
 def admin():
@@ -934,6 +1184,23 @@ def admin_statistics():
         return redirect(url_for('index'))
 
     return render_template('admin_statistics.html', stats=get_admin_statistics())
+
+
+@app.route('/admin/relatorios')
+@login_required
+def admin_participant_reports():
+    if not is_admin_user():
+        return redirect(url_for('index'))
+
+    selected_user_id = request.args.get('participante', type=int)
+    reports = get_participant_reports(selected_user_id)
+    return render_template(
+        'participant_report.html',
+        admin_view=True,
+        selected_report=reports['selected_report'],
+        consolidated=reports['consolidated'],
+        users=reports['users'],
+    )
 
 
 @app.route('/admin/update_official_champion', methods=['POST'])

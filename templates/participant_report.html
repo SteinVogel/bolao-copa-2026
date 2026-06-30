@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .report-header {
+        align-items: flex-end;
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+    }
+
+    .report-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .report-select-form {
+        align-items: end;
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: minmax(240px, 360px) auto;
+    }
+
+    .report-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .report-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(33, 37, 41, 0.06);
+        min-height: 116px;
+        padding: 1rem;
+    }
+
+    .report-card.primary {
+        background: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    .report-label {
+        color: #6c757d;
+        font-size: 0.84rem;
+        font-weight: 800;
+        margin-bottom: 0.35rem;
+    }
+
+    .report-card.primary .report-label,
+    .report-card.primary .report-note {
+        color: rgba(255, 255, 255, 0.82);
+    }
+
+    .report-value {
+        font-size: clamp(1.7rem, 4vw, 2.25rem);
+        font-weight: 850;
+        line-height: 1;
+        margin-bottom: 0.35rem;
+    }
+
+    .report-note {
+        color: #6c757d;
+        font-size: 0.86rem;
+        margin: 0;
+    }
+
+    .report-section-title {
+        margin-top: 1.75rem;
+    }
+
+    .report-table {
+        min-width: 980px;
+    }
+
+    .report-timeline-table {
+        min-width: 1120px;
+    }
+
+    .report-status {
+        border-radius: 999px;
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 0.18rem 0.55rem;
+        white-space: nowrap;
+    }
+
+    .report-status.exact {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .report-status.outcome,
+    .report-status.partial {
+        background: #cff4fc;
+        color: #055160;
+    }
+
+    .report-status.error,
+    .report-status.missing {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .report-status.pending {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .report-final-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .report-final-item {
+        background: rgba(13, 110, 253, 0.06);
+        border: 1px solid rgba(13, 110, 253, 0.12);
+        border-radius: 8px;
+        padding: 0.75rem;
+    }
+
+    .report-final-item span {
+        color: #6c757d;
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 800;
+        margin-bottom: 0.2rem;
+    }
+
+    .report-final-item strong {
+        display: block;
+        font-size: 1rem;
+    }
+
+    @media (max-width: 991.98px) {
+        .report-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .report-final-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .report-header {
+            display: block;
+        }
+
+        .report-actions {
+            margin-top: 0.75rem;
+        }
+
+        .report-actions .btn {
+            flex: 1 1 100%;
+        }
+
+        .report-select-form {
+            grid-template-columns: 1fr;
+        }
+
+        .report-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .report-card {
+            min-height: auto;
+            padding: 0.9rem;
+        }
+    }
+
+    @media print {
+        @page {
+            size: landscape;
+            margin: 10mm;
+        }
+
+        body {
+            background: #fff;
+            color: #000;
+            font-size: 8pt;
+        }
+
+        .navbar,
+        .report-actions,
+        .report-select-form {
+            display: none !important;
+        }
+
+        body > .container {
+            margin: 0 !important;
+            max-width: none !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+
+        .report-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 4mm;
+        }
+
+        .report-card,
+        .report-final-item {
+            box-shadow: none;
+            break-inside: avoid;
+            padding: 3mm;
+        }
+
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        .report-table,
+        .report-timeline-table {
+            font-size: 7pt;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .report-table th,
+        .report-table td,
+        .report-timeline-table th,
+        .report-timeline-table td {
+            padding: 1.3mm;
+        }
+
+        tr {
+            break-inside: avoid;
+        }
+    }
+</style>
+
+<div class="report-header">
+    <div>
+        <h2 class="mb-1">
+            {% if admin_view %}Relatorios dos participantes{% else %}Meu relatorio{% endif %}
+        </h2>
+        {% if selected_report %}
+            <p class="text-muted mb-0">{{ selected_report.user.username }}</p>
+        {% else %}
+            <p class="text-muted mb-0">Nenhum participante cadastrado.</p>
+        {% endif %}
+    </div>
+    <div class="report-actions">
+        <button type="button" class="btn btn-primary" onclick="window.print()">Exportar PDF</button>
+        {% if admin_view %}
+            <a href="{{ url_for('admin_statistics') }}" class="btn btn-outline-primary">Estatisticas</a>
+            <a href="{{ url_for('admin') }}" class="btn btn-outline-primary">Admin</a>
+        {% else %}
+            <a href="{{ url_for('my_performance') }}" class="btn btn-outline-primary">Meu desempenho</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if admin_view %}
+<form method="GET" action="{{ url_for('admin_participant_reports') }}" class="report-select-form mb-4">
+    <div>
+        <label class="form-label" for="participant-select">Participante</label>
+        <select class="form-select" id="participant-select" name="participante" onchange="this.form.submit()">
+            {% for user in users %}
+                <option value="{{ user.id }}" {% if selected_report and selected_report.user.id == user.id %}selected{% endif %}>
+                    {{ user.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Ver relatorio</button>
+</form>
+
+<h3 class="report-section-title mt-0">Consolidado geral</h3>
+{% if consolidated %}
+<div class="table-responsive mb-4">
+    <table class="table table-sm align-middle report-table">
+        <thead>
+            <tr>
+                <th>Participante</th>
+                <th class="text-end">Ranking</th>
+                <th class="text-end">Pontos</th>
+                <th class="text-end">Palpites</th>
+                <th class="text-end">% jogos</th>
+                <th class="text-end">% finalizados</th>
+                <th class="text-end">Aprov. palpites</th>
+                <th class="text-end">Aprov. geral</th>
+                <th class="text-end">Exatos</th>
+                <th class="text-end">Seq. pontuando</th>
+                <th class="text-end">Sem palpite finaliz.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in consolidated %}
+            <tr {% if selected_report and selected_report.user.id == report.user.id %}class="table-primary"{% endif %}>
+                <td>
+                    <a href="{{ url_for('admin_participant_reports', participante=report.user.id) }}">
+                        {{ report.user.username }}
+                    </a>
+                </td>
+                <td class="text-end">{{ report.ranking_position or '-' }}</td>
+                <td class="text-end"><strong>{{ report.performance.points }}</strong></td>
+                <td class="text-end">{{ report.summary.total_bets }}/{{ report.summary.total_games }}</td>
+                <td class="text-end">{{ report.summary.betting_rate_total }}%</td>
+                <td class="text-end">{{ report.summary.betting_rate_evaluated }}%</td>
+                <td class="text-end">{{ report.summary.success_rate_made_bets }}%</td>
+                <td class="text-end">{{ report.summary.success_rate_all_evaluated }}%</td>
+                <td class="text-end">{{ report.performance.exact_scores }}</td>
+                <td class="text-end">{{ report.streaks.scoring }}</td>
+                <td class="text-end">{{ report.summary.missing_evaluated_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">Nenhum participante cadastrado.</div>
+{% endif %}
+{% endif %}
+
+{% if selected_report %}
+<div class="report-grid">
+    <section class="report-card primary">
+        <div class="report-label">Pontos totais</div>
+        <div class="report-value">{{ selected_report.performance.points }}</div>
+        <p class="report-note">
+            {{ selected_report.performance.bet_points }} em jogos + {{ selected_report.performance.final_bonus }} de bonus.
+        </p>
+    </section>
+
+    <section class="report-card">
+        <div class="report-label">Ranking atual</div>
+        <div class="report-value">
+            {% if selected_report.ranking_position %}{{ selected_report.ranking_position }}{% else %}-{% endif %}
+        </div>
+        <p class="report-note">Posicao entre participantes.</p>
+    </section>
+
+    <section class="report-card">
+        <div class="report-label">Jogos palpitados</div>
+        <div class="report-value">{{ selected_report.summary.total_bets }}</div>
+        <p class="report-note">
+            {{ selected_report.summary.betting_rate_total }}% dos {{ selected_report.summary.total_games }} jogos.
+        </p>
+    </section>
+
+    <section class="report-card">
+        <div class="report-label">Finalizados palpitados</div>
+        <div class="report-value">{{ selected_report.summary.evaluated_bets }}</div>
+        <p class="report-note">
+            {{ selected_report.summary.betting_rate_evaluated }}% dos {{ selected_report.summary.evaluated_games }} finalizados.
+        </p>
+    </section>
+
+    <section class="report-card">
+        <div class="report-label">Aproveitamento nos palpites</div>
+        <div class="report-value">{{ selected_report.summary.success_rate_made_bets }}%</div>
+        <p class="report-note">
+            {{ selected_report.summary.points_from_made_bets }} de {{ selected_report.summary.possible_points_made_bets }} pontos possiveis.
+        </p>
+    </section>
+
+    <section class="report-card">
+        <div class="report-label">Aproveitamento geral</div>
+        <div class="report-value">{{ selected_report.summary.success_rate_all_evaluated }}%</div>
+        <p class="report-note">
+            Considera jogo finalizado sem palpite como 0.
+        </p>
+    </section>
+
+    <section class="report-card">
+        <div class="report-label">Media por palpite apurado</div>
+        <div class="report-value">{{ selected_report.summary.average_points_per_evaluated_bet }}</div>
+        <p class="report-note">Pontos por jogo finalizado com palpite.</p>
+    </section>
+
+    <section class="report-card">
+        <div class="report-label">Acertos</div>
+        <div class="report-value">{{ selected_report.performance.exact_scores }}</div>
+        <p class="report-note">
+            {{ selected_report.performance.correct_outcomes }} vencedores/empates,
+            {{ selected_report.performance.partial_scores }} gols de um lado,
+            {{ selected_report.performance.errors }} erros.
+        </p>
+    </section>
+</div>
+
+<h3 class="report-section-title">Palpites finais</h3>
+<div class="report-final-grid">
+    <section class="report-final-item">
+        <span>Campeao</span>
+        <strong>{{ selected_report.final_picks.champion or 'Pendente' }}</strong>
+        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_champion or 'Nao definido' }}</small>
+    </section>
+    <section class="report-final-item">
+        <span>Vice-campeao</span>
+        <strong>{{ selected_report.final_picks.runner_up or 'Pendente' }}</strong>
+        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_runner_up or 'Nao definido' }}</small>
+    </section>
+    <section class="report-final-item">
+        <span>Terceiro lugar</span>
+        <strong>{{ selected_report.final_picks.third_place or 'Pendente' }}</strong>
+        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_third_place or 'Nao definido' }}</small>
+    </section>
+</div>
+
+<h3 class="report-section-title">Sequencias e destaques</h3>
+<div class="report-grid">
+    <section class="report-card">
+        <div class="report-label">Melhor sequencia pontuando</div>
+        <div class="report-value">{{ selected_report.streaks.scoring }}</div>
+        <p class="report-note">Jogos finalizados consecutivos com mais de 0 ponto.</p>
+    </section>
+    <section class="report-card">
+        <div class="report-label">Sequencia de exatos</div>
+        <div class="report-value">{{ selected_report.streaks.exact }}</div>
+        <p class="report-note">Placares exatos consecutivos em jogos finalizados.</p>
+    </section>
+    <section class="report-card">
+        <div class="report-label">Maior seca</div>
+        <div class="report-value">{{ selected_report.streaks.without_points }}</div>
+        <p class="report-note">Jogos finalizados consecutivos sem pontuar.</p>
+    </section>
+    <section class="report-card">
+        <div class="report-label">Sequencia palpitando</div>
+        <div class="report-value">{{ selected_report.streaks.bets_made }}</div>
+        <p class="report-note">Jogos consecutivos com palpite registrado.</p>
+    </section>
+</div>
+
+<div class="report-grid mt-3">
+    <section class="report-card">
+        <div class="report-label">Melhor jogo</div>
+        {% if selected_report.highlights.best_game %}
+            <div class="fw-bold">{{ selected_report.highlights.best_game.game.team_a }} vs {{ selected_report.highlights.best_game.game.team_b }}</div>
+            <p class="report-note">{{ selected_report.highlights.best_game.points }} pontos.</p>
+        {% else %}
+            <div class="fw-bold">Sem jogos apurados</div>
+            <p class="report-note">Aguardando palpites com resultado.</p>
+        {% endif %}
+    </section>
+    <section class="report-card">
+        <div class="report-label">Melhor fase</div>
+        {% if selected_report.highlights.best_phase %}
+            <div class="fw-bold">{{ selected_report.highlights.best_phase.phase }}</div>
+            <p class="report-note">{{ selected_report.highlights.best_phase.success_rate_all }}% de aproveitamento geral.</p>
+        {% else %}
+            <div class="fw-bold">Sem fase apurada</div>
+            <p class="report-note">Aguardando resultados.</p>
+        {% endif %}
+    </section>
+    <section class="report-card">
+        <div class="report-label">Fase mais dificil</div>
+        {% if selected_report.highlights.worst_phase %}
+            <div class="fw-bold">{{ selected_report.highlights.worst_phase.phase }}</div>
+            <p class="report-note">{{ selected_report.highlights.worst_phase.success_rate_all }}% de aproveitamento geral.</p>
+        {% else %}
+            <div class="fw-bold">Sem fase apurada</div>
+            <p class="report-note">Aguardando resultados.</p>
+        {% endif %}
+    </section>
+    <section class="report-card">
+        <div class="report-label">Pendencias</div>
+        <div class="report-value">{{ selected_report.summary.missing_evaluated_count }}</div>
+        <p class="report-note">
+            Jogos finalizados sem palpite. {{ selected_report.summary.pending_bets_count }} palpites aguardam resultado.
+        </p>
+    </section>
+</div>
+
+<h3 class="report-section-title">Desempenho por fase</h3>
+{% if selected_report.phase_stats %}
+<div class="table-responsive">
+    <table class="table table-sm align-middle report-table">
+        <thead>
+            <tr>
+                <th>Fase</th>
+                <th class="text-end">Jogos finalizados</th>
+                <th class="text-end">Palpites</th>
+                <th class="text-end">Pontos</th>
+                <th class="text-end">Possiveis nos palpites</th>
+                <th class="text-end">Aprov. palpites</th>
+                <th class="text-end">Aprov. geral</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for phase in selected_report.phase_stats %}
+            <tr>
+                <td><strong>{{ phase.phase }}</strong></td>
+                <td class="text-end">{{ phase.games }}</td>
+                <td class="text-end">{{ phase.bets }}</td>
+                <td class="text-end">{{ phase.points }}</td>
+                <td class="text-end">{{ phase.possible_points_bets }}</td>
+                <td class="text-end">{{ phase.success_rate_bets }}%</td>
+                <td class="text-end">{{ phase.success_rate_all }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">Nenhuma fase com resultado cadastrado ainda.</div>
+{% endif %}
+
+<h3 class="report-section-title">Historico cronologico</h3>
+<div class="table-responsive">
+    <table class="table table-sm align-middle report-timeline-table">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Fase</th>
+                <th>Jogo</th>
+                <th class="text-end">Palpite</th>
+                <th class="text-end">Resultado</th>
+                <th class="text-end">Pontos</th>
+                <th>Status</th>
+                <th class="text-end">Acumulado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in selected_report.timeline %}
+            <tr>
+                <td>{{ item.game.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ item.game.phase }}</td>
+                <td><strong>{{ item.game.team_a }} vs {{ item.game.team_b }}</strong></td>
+                <td class="text-end">
+                    {% if item.bet %}
+                        {{ item.bet.score_a }} - {{ item.bet.score_b }}
+                    {% else %}
+                        <span class="text-muted">Sem palpite</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    {% if item.result %}
+                        {{ item.result.score_a }} - {{ item.result.score_b }}
+                    {% else %}
+                        <span class="text-muted">Pendente</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    {% if item.points is not none %}
+                        {{ item.points }}
+                        {% if item.max_points %}
+                            <span class="text-muted small">/{{ item.max_points }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td><span class="report-status {{ item.status }}">{{ item.outcome }}</span></td>
+                <td class="text-end">{{ item.running_points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

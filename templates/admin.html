@@ -98,7 +98,10 @@
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <h2 class="mb-0">Painel Administrativo</h2>
-    <a href="{{ url_for('admin_statistics') }}" class="btn btn-outline-primary">Ver estatisticas</a>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin_statistics') }}" class="btn btn-outline-primary">Ver estatisticas</a>
+        <a href="{{ url_for('admin_participant_reports') }}" class="btn btn-outline-primary">Relatorios</a>
+    </div>
 </div>
 
 <h3>Classificação Final Oficial</h3>
