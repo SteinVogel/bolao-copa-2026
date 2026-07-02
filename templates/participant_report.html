@@ -240,7 +240,7 @@
 <div class="report-header">
     <div>
         <h2 class="mb-1">
-            {% if admin_view %}Relatorios dos participantes{% else %}Meu relatorio{% endif %}
+            {% if admin_view %}Relatórios dos participantes{% else %}Meu relatório{% endif %}
         </h2>
         {% if selected_report %}
             <p class="text-muted mb-0">{{ selected_report.user.username }}</p>
@@ -251,7 +251,7 @@
     <div class="report-actions">
         <button type="button" class="btn btn-primary" onclick="window.print()">Exportar PDF</button>
         {% if admin_view %}
-            <a href="{{ url_for('admin_statistics') }}" class="btn btn-outline-primary">Estatisticas</a>
+            <a href="{{ url_for('admin_statistics') }}" class="btn btn-outline-primary">Estatísticas</a>
             <a href="{{ url_for('admin') }}" class="btn btn-outline-primary">Admin</a>
         {% else %}
             <a href="{{ url_for('my_performance') }}" class="btn btn-outline-primary">Meu desempenho</a>
@@ -271,7 +271,7 @@
             {% endfor %}
         </select>
     </div>
-    <button type="submit" class="btn btn-primary">Ver relatorio</button>
+    <button type="submit" class="btn btn-primary">Ver relatório</button>
 </form>
 
 <h3 class="report-section-title mt-0">Consolidado geral</h3>
@@ -327,7 +327,7 @@
         <div class="report-label">Pontos totais</div>
         <div class="report-value">{{ selected_report.performance.points }}</div>
         <p class="report-note">
-            {{ selected_report.performance.bet_points }} em jogos + {{ selected_report.performance.final_bonus }} de bonus.
+            {{ selected_report.performance.bet_points }} em jogos + {{ selected_report.performance.final_bonus }} de bônus.
         </p>
     </section>
 
@@ -336,7 +336,7 @@
         <div class="report-value">
             {% if selected_report.ranking_position %}{{ selected_report.ranking_position }}{% else %}-{% endif %}
         </div>
-        <p class="report-note">Posicao entre participantes.</p>
+        <p class="report-note">Posição entre participantes.</p>
     </section>
 
     <section class="report-card">
@@ -359,7 +359,7 @@
         <div class="report-label">Aproveitamento nos palpites</div>
         <div class="report-value">{{ selected_report.summary.success_rate_made_bets }}%</div>
         <p class="report-note">
-            {{ selected_report.summary.points_from_made_bets }} de {{ selected_report.summary.possible_points_made_bets }} pontos possiveis.
+            {{ selected_report.summary.points_from_made_bets }} de {{ selected_report.summary.possible_points_made_bets }} pontos possíveis.
         </p>
     </section>
 
@@ -372,7 +372,7 @@
     </section>
 
     <section class="report-card">
-        <div class="report-label">Media por palpite apurado</div>
+        <div class="report-label">Média por palpite apurado</div>
         <div class="report-value">{{ selected_report.summary.average_points_per_evaluated_bet }}</div>
         <p class="report-note">Pontos por jogo finalizado com palpite.</p>
     </section>
@@ -391,31 +391,31 @@
 <h3 class="report-section-title">Palpites finais</h3>
 <div class="report-final-grid">
     <section class="report-final-item">
-        <span>Campeao</span>
+        <span>Campeão</span>
         <strong>{{ selected_report.final_picks.champion or 'Pendente' }}</strong>
-        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_champion or 'Nao definido' }}</small>
+        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_champion or 'Não definido' }}</small>
     </section>
     <section class="report-final-item">
-        <span>Vice-campeao</span>
+        <span>Vice-campeão</span>
         <strong>{{ selected_report.final_picks.runner_up or 'Pendente' }}</strong>
-        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_runner_up or 'Nao definido' }}</small>
+        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_runner_up or 'Não definido' }}</small>
     </section>
     <section class="report-final-item">
         <span>Terceiro lugar</span>
         <strong>{{ selected_report.final_picks.third_place or 'Pendente' }}</strong>
-        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_third_place or 'Nao definido' }}</small>
+        <small class="text-muted">Oficial: {{ selected_report.final_picks.official_third_place or 'Não definido' }}</small>
     </section>
 </div>
 
-<h3 class="report-section-title">Sequencias e destaques</h3>
+<h3 class="report-section-title">Sequências e destaques</h3>
 <div class="report-grid">
     <section class="report-card">
-        <div class="report-label">Melhor sequencia pontuando</div>
+        <div class="report-label">Melhor sequência pontuando</div>
         <div class="report-value">{{ selected_report.streaks.scoring }}</div>
         <p class="report-note">Jogos finalizados consecutivos com mais de 0 ponto.</p>
     </section>
     <section class="report-card">
-        <div class="report-label">Sequencia de exatos</div>
+        <div class="report-label">Sequência de exatos</div>
         <div class="report-value">{{ selected_report.streaks.exact }}</div>
         <p class="report-note">Placares exatos consecutivos em jogos finalizados.</p>
     </section>
@@ -425,7 +425,7 @@
         <p class="report-note">Jogos finalizados consecutivos sem pontuar.</p>
     </section>
     <section class="report-card">
-        <div class="report-label">Sequencia palpitando</div>
+        <div class="report-label">Sequência palpitando</div>
         <div class="report-value">{{ selected_report.streaks.bets_made }}</div>
         <p class="report-note">Jogos consecutivos com palpite registrado.</p>
     </section>
@@ -453,7 +453,7 @@
         {% endif %}
     </section>
     <section class="report-card">
-        <div class="report-label">Fase mais dificil</div>
+        <div class="report-label">Fase mais difícil</div>
         {% if selected_report.highlights.worst_phase %}
             <div class="fw-bold">{{ selected_report.highlights.worst_phase.phase }}</div>
             <p class="report-note">{{ selected_report.highlights.worst_phase.success_rate_all }}% de aproveitamento geral.</p>
@@ -463,7 +463,7 @@
         {% endif %}
     </section>
     <section class="report-card">
-        <div class="report-label">Pendencias</div>
+        <div class="report-label">Pendências</div>
         <div class="report-value">{{ selected_report.summary.missing_evaluated_count }}</div>
         <p class="report-note">
             Jogos finalizados sem palpite. {{ selected_report.summary.pending_bets_count }} palpites aguardam resultado.
@@ -481,7 +481,7 @@
                 <th class="text-end">Jogos finalizados</th>
                 <th class="text-end">Palpites</th>
                 <th class="text-end">Pontos</th>
-                <th class="text-end">Possiveis nos palpites</th>
+                <th class="text-end">Possíveis nos palpites</th>
                 <th class="text-end">Aprov. palpites</th>
                 <th class="text-end">Aprov. geral</th>
             </tr>
@@ -505,7 +505,7 @@
 <div class="alert alert-info">Nenhuma fase com resultado cadastrado ainda.</div>
 {% endif %}
 
-<h3 class="report-section-title">Historico cronologico</h3>
+<h3 class="report-section-title">Histórico cronológico</h3>
 <div class="table-responsive">
     <table class="table table-sm align-middle report-timeline-table">
         <thead>

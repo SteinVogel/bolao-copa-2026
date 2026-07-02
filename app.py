@@ -20,7 +20,7 @@ running_on_railway = any(
 )
 
 if database_url and database_url.strip().startswith('${{'):
-    raise RuntimeError('DATABASE_URL do Railway nao foi resolvida. Configure DATABASE_URL=${{Postgres.DATABASE_URL}} no servico do app.')
+    raise RuntimeError('DATABASE_URL do Railway não foi resolvida. Configure DATABASE_URL=${{Postgres.DATABASE_URL}} no serviço do app.')
 
 if database_url and database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
@@ -897,6 +897,14 @@ def should_move_game_to_end(game, now):
     return game.date + timedelta(hours=3) <= now
 
 
+def is_unbet_game_starting_soon(game, now, user_bets):
+    starts_in = game.date - now
+    return (
+        game.id not in user_bets
+        and timedelta(0) < starts_in < timedelta(hours=3)
+    )
+
+
 def get_current_time():
     return datetime.now(APP_TIMEZONE).replace(tzinfo=None)
 
@@ -931,6 +939,13 @@ def index():
         result_item = game_results.get(game_id)
         if result_item:
             bet_points[game_id] = calculate_points(bet_item, result_item)
+    unbet_games_starting_soon = []
+    if has_final_standings_pick(current_user):
+        unbet_games_starting_soon = [
+            game
+            for game in games
+            if is_unbet_game_starting_soon(game, now, user_bets)
+        ]
     grouped_games = OrderedDict()
     for game in games:
         game_day = game.date.date()
@@ -941,6 +956,7 @@ def index():
         user_bets=user_bets,
         game_results=game_results,
         bet_points=bet_points,
+        unbet_games_starting_soon=unbet_games_starting_soon,
         now=now,
     )
 
