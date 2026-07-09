@@ -628,20 +628,65 @@ def calculate_participant_report(user, games=None, bets=None, results=None, rank
 
 
 def calculate_ranking_positions(users):
-    ranking_data = [{'user': user, **calculate_user_performance(user)} for user in users]
-    ranking_data.sort(
-        key=lambda item: (
-            item['points'],
-            item['exact_scores'],
-            item['correct_outcomes'],
-            item['partial_scores'],
-            -item['errors'],
-        ),
-        reverse=True,
-    )
+    ranking_data = get_ranking_data(users)
     return {
         item['user'].id: index
         for index, item in enumerate(ranking_data, start=1)
+    }
+
+
+def get_ranking_score_key(item):
+    return (
+        item['points'],
+        item['exact_scores'],
+        item['correct_outcomes'],
+        item['partial_scores'],
+        -item['errors'],
+    )
+
+
+def get_ranking_data(users=None):
+    users = users if users is not None else User.query.filter_by(is_admin=False).all()
+    ranking_data = [{'user': user, **calculate_user_performance(user)} for user in users]
+    ranking_data.sort(key=get_ranking_score_key, reverse=True)
+    return ranking_data
+
+
+def is_pool_finished():
+    total_games = Game.query.count()
+    if total_games == 0:
+        return False
+
+    evaluated_games = db.session.query(db.func.count(db.distinct(Result.game_id))).scalar() or 0
+    return (
+        evaluated_games >= total_games
+        and bool(get_official_champion())
+        and bool(get_official_runner_up())
+        and bool(get_official_third_place())
+    )
+
+
+def get_victory_summary():
+    if not is_pool_finished():
+        return None
+
+    ranking_data = get_ranking_data()
+    if not ranking_data:
+        return None
+
+    winning_key = get_ranking_score_key(ranking_data[0])
+    winners = [
+        item
+        for item in ranking_data
+        if get_ranking_score_key(item) == winning_key
+    ]
+
+    return {
+        'winners': winners,
+        'winner_count': len(winners),
+        'official_champion': get_official_champion(),
+        'official_runner_up': get_official_runner_up(),
+        'official_third_place': get_official_third_place(),
     }
 
 
@@ -909,8 +954,22 @@ def get_current_time():
     return datetime.now(APP_TIMEZONE).replace(tzinfo=None)
 
 
+def parse_admin_datetime(value):
+    try:
+        return datetime.strptime(value.strip(), '%Y-%m-%dT%H:%M')
+    except (AttributeError, ValueError):
+        return None
+
+
 def is_admin_user():
     return current_user.is_authenticated and current_user.is_admin
+
+
+@app.context_processor
+def inject_victory_summary():
+    if not current_user.is_authenticated:
+        return {'victory_summary': None}
+    return {'victory_summary': get_victory_summary()}
 
 
 def find_user_by_username(username):
@@ -1122,20 +1181,7 @@ def bet(game_id):
 @app.route('/ranking')
 @login_required
 def ranking():
-    users = User.query.filter_by(is_admin=False).all()
-    ranking_data = []
-    for user in users:
-        ranking_data.append({'user': user, **calculate_user_performance(user)})
-    ranking_data.sort(
-        key=lambda item: (
-            item['points'],
-            item['exact_scores'],
-            item['correct_outcomes'],
-            item['partial_scores'],
-            -item['errors'],
-        ),
-        reverse=True,
-    )
+    ranking_data = get_ranking_data()
     return render_template('ranking.html', ranking=ranking_data)
 
 
@@ -1229,19 +1275,23 @@ def update_official_champion():
     runner_up = request.form['runner_up'].strip()
     third_place = request.form['third_place'].strip()
     team_names = get_team_names()
-    selected_teams = {champion, runner_up, third_place}
+    selected_teams = [
+        team_name
+        for team_name in (champion, runner_up, third_place)
+        if team_name
+    ]
 
-    if any(team_name not in team_names for team_name in selected_teams):
+    if selected_teams and any(team_name not in team_names for team_name in selected_teams):
         flash('Selecione seleções válidas')
         return redirect(url_for('admin'))
 
-    if len(selected_teams) < 3:
+    if len(set(selected_teams)) != len(selected_teams):
         flash('Campeão, vice-campeão e terceiro lugar devem ser seleções diferentes')
         return redirect(url_for('admin'))
 
-    set_setting('official_champion', champion)
-    set_setting('official_runner_up', runner_up)
-    set_setting('official_third_place', third_place)
+    set_setting('official_champion', champion or None)
+    set_setting('official_runner_up', runner_up or None)
+    set_setting('official_third_place', third_place or None)
     flash('Classificação final oficial atualizada')
     return redirect(url_for('admin'))
 
@@ -1255,10 +1305,15 @@ def add_game():
     team_b = request.form['team_b']
     date_str = request.form['date']
     phase = request.form['phase']
-    date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M')
+    date = parse_admin_datetime(date_str)
+    if not date:
+        flash('Informe uma data e hora vÃ¡lidas para o jogo')
+        return redirect(url_for('admin'))
+
     game = Game(team_a=team_a, team_b=team_b, date=date, phase=phase)
     db.session.add(game)
     db.session.commit()
+    flash('Jogo adicionado')
     return redirect(url_for('admin'))
 
 
@@ -1300,7 +1355,12 @@ def update_game(game_id):
     game = Game.query.get_or_404(game_id)
     game.team_a = request.form['team_a'].strip()
     game.team_b = request.form['team_b'].strip()
-    game.date = datetime.strptime(request.form['date'], '%Y-%m-%dT%H:%M')
+    date = parse_admin_datetime(request.form['date'])
+    if not date:
+        flash('Informe uma data e hora vÃ¡lidas para o jogo')
+        return redirect(url_for('admin'))
+
+    game.date = date
     game.phase = request.form['phase'].strip()
     db.session.commit()
     flash('Jogo atualizado')

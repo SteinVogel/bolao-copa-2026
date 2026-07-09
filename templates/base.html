@@ -24,6 +24,72 @@
             box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.2);
         }
 
+        .victory-nav-button {
+            background: transparent;
+            border: 0;
+        }
+
+        .victory-hero {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem;
+        }
+
+        .victory-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .victory-podium {
+            color: #6c757d;
+            font-size: 0.92rem;
+            margin: 0.35rem 0 0;
+        }
+
+        .victory-winners {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .victory-winner-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.9rem;
+        }
+
+        .victory-winner-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 0.6rem;
+        }
+
+        .victory-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+
+        .victory-stat {
+            background: rgba(13, 110, 253, 0.06);
+            border-radius: 8px;
+            padding: 0.55rem;
+        }
+
+        .victory-stat span {
+            color: #6c757d;
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .victory-stat strong {
+            display: block;
+            font-size: 1.05rem;
+            line-height: 1.15;
+            margin-top: 0.15rem;
+        }
+
         @keyframes recently-saved-highlight {
             0% {
                 background-color: rgba(25, 135, 84, 0.16);
@@ -70,6 +136,9 @@
                         <a class="nav-link" href="{{ url_for('champion_pick') }}">Finais</a>
                     {% endif %}
                     <a class="nav-link" href="{{ url_for('ranking') }}">Ranking</a>
+                    {% if victory_summary %}
+                        <button class="nav-link victory-nav-button" type="button" id="show-victory-modal">Vit&oacute;ria</button>
+                    {% endif %}
                     <a class="nav-link" href="{{ url_for('terms') }}">Termos</a>
                     {% if current_user.is_admin %}
                         <a class="nav-link" href="{{ url_for('admin_statistics') }}">Estatísticas</a>
@@ -91,7 +160,91 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </div>
+    {% if victory_summary %}
+    <div class="modal fade" id="victory-modal" tabindex="-1" aria-labelledby="victory-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="victory-hero">
+                    <h2 class="victory-title" id="victory-modal-title">
+                        {% if victory_summary.winner_count == 1 %}
+                            Vencedor do bol&atilde;o
+                        {% else %}
+                            Vencedores do bol&atilde;o
+                        {% endif %}
+                    </h2>
+                    <p class="victory-podium">
+                        Campe&atilde;o: {{ victory_summary.official_champion }}.
+                        Vice: {{ victory_summary.official_runner_up }}.
+                        Terceiro: {{ victory_summary.official_third_place }}.
+                    </p>
+                </div>
+                <div class="modal-body">
+                    <div class="victory-winners">
+                        {% for winner in victory_summary.winners %}
+                        <section class="victory-winner-card">
+                            <div class="victory-winner-name">{{ winner.user.username }}</div>
+                            <div class="victory-stats">
+                                <div class="victory-stat">
+                                    <span>Pontos totais</span>
+                                    <strong>{{ winner.points }}</strong>
+                                </div>
+                                <div class="victory-stat">
+                                    <span>Jogos + b&ocirc;nus</span>
+                                    <strong>{{ winner.bet_points }} + {{ winner.final_bonus }}</strong>
+                                </div>
+                                <div class="victory-stat">
+                                    <span>Placares exatos</span>
+                                    <strong>{{ winner.exact_scores }}</strong>
+                                </div>
+                                <div class="victory-stat">
+                                    <span>Vencedores/empates</span>
+                                    <strong>{{ winner.correct_outcomes }}</strong>
+                                </div>
+                                <div class="victory-stat">
+                                    <span>Palpites apurados</span>
+                                    <strong>{{ winner.evaluated_bets }}/{{ winner.evaluated_games }}</strong>
+                                </div>
+                                <div class="victory-stat">
+                                    <span>Aproveitamento</span>
+                                    <strong>{{ winner.success_rate }}%</strong>
+                                </div>
+                            </div>
+                        </section>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ url_for('ranking') }}" class="btn btn-primary">Ver ranking</a>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% if victory_summary %}
+    <script>
+        (() => {
+            const victoryModalElement = document.getElementById('victory-modal');
+            const showVictoryButton = document.getElementById('show-victory-modal');
+            const victorySeenKey = 'copa2026-victory-modal-seen';
+            const victoryModal = new bootstrap.Modal(victoryModalElement);
+
+            const showVictoryModal = () => {
+                victoryModal.show();
+                sessionStorage.setItem(victorySeenKey, '1');
+            };
+
+            if (sessionStorage.getItem(victorySeenKey) !== '1') {
+                window.requestAnimationFrame(showVictoryModal);
+            }
+
+            if (showVictoryButton) {
+                showVictoryButton.addEventListener('click', showVictoryModal);
+            }
+        })();
+    </script>
+    {% endif %}
     <script>
         (() => {
             const scrollKeyFor = (path) => `copa2026-scroll:${path}`;

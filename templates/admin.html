@@ -109,7 +109,7 @@
 <form method="POST" action="{{ url_for('update_official_champion') }}" class="row" id="official-final-form">
     <div class="col-md-3 mb-2">
         <label class="form-label" for="champion">Campeão</label>
-        <select class="form-select" id="champion" name="champion" required>
+        <select class="form-select" id="champion" name="champion">
             <option value="">Selecione</option>
             {% for team_name in team_names %}
                 <option value="{{ team_name }}" {% if team_name == official_champion %}selected{% endif %}>{{ team_name }}</option>
@@ -118,7 +118,7 @@
     </div>
     <div class="col-md-3 mb-2">
         <label class="form-label" for="runner_up">Vice-campeão</label>
-        <select class="form-select" id="runner_up" name="runner_up" required>
+        <select class="form-select" id="runner_up" name="runner_up">
             <option value="">Selecione</option>
             {% for team_name in team_names %}
                 <option value="{{ team_name }}" {% if team_name == official_runner_up %}selected{% endif %}>{{ team_name }}</option>
@@ -127,7 +127,7 @@
     </div>
     <div class="col-md-3 mb-2">
         <label class="form-label" for="third_place">Terceiro lugar</label>
-        <select class="form-select" id="third_place" name="third_place" required>
+        <select class="form-select" id="third_place" name="third_place">
             <option value="">Selecione</option>
             {% for team_name in team_names %}
                 <option value="{{ team_name }}" {% if team_name == official_third_place %}selected{% endif %}>{{ team_name }}</option>
